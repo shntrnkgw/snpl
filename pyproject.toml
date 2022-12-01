@@ -23,7 +23,7 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/shntrnkgw/hicsv"
+Homepage = "https://github.com/shntrnkgw/snpl"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
