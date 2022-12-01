@@ -65,7 +65,7 @@ Examples:
     >>> y = [3.0, 4.0, 5.0]
     >>> snpl.pyplot.bar(x, y) # you have full access to pyplot functionality
     >>> snpl.show()
-
+    
 """
 __version__ = "0.3.0"
 __author__ = "NAKAGAWA Shintaro"
@@ -77,8 +77,7 @@ from matplotlib import colors, cm, pyplot, ticker, axes, rc
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.mathtext import _mathtext
 
-
-from snpl import afm, fit, gpc, image, tensile, util
+from snpl import afm, bod, fit, gpc, image, tensile, rheo, util, uvvis
 
 #----------------#
 # Runtime config #
@@ -263,8 +262,7 @@ def remove_borders(*args, ax=None):
     Args:
         args: One or more strings from ("top", "left", "right", "bottom")
             that specifies the border(s) to be removed. 
-        ax: Axes object to which the label will be set. 
-            If `None`, the current Axes in `pyplot`. 
+        ax: Axes object to which the function operates. If `None`, the current Axes in `pyplot`. 
     """
     ax_ = _get_proper_axis(ax)
     sides = ("top", "left", "right", "bottom")
@@ -315,7 +313,7 @@ def limx(left=None, right=None, expandratio=0.03, ax=None):
     Args:
         left: left limit. 
         right: right limit. 
-        ax: Axes instance to set/get the limit. 
+        ax: Axes object to which the function operates. If `None`, the current Axes in `pyplot`. 
         expandratio: expansion ratio. 0.0 for no expansion. 
 
     Returns:
@@ -345,7 +343,7 @@ def limy(lower=None, upper=None, expandratio=0.03, ax=None):
     Args:
         lower: lower limit. 
         upper: upper limit. 
-        ax: Axes instance to set/get the limit. 
+        ax: Axes object to which the function operates. If `None`, the current Axes in `pyplot`. 
         expandratio: expansion ratio. 0.0 for no expansion. 
 
     Returns:
@@ -371,8 +369,7 @@ def expandx(ratio=0.03, ax=None):
     
     Args:
         ratio: Expand ratio. 0.0 for no expansion. 
-        ax: Axes object to which the label will be set. 
-            If `None`, the current Axes in `pyplot`. 
+        ax: Axes object to which the function operates. If `None`, the current Axes in `pyplot`. 
     """
     ax_ = _get_proper_axis(ax)
     
@@ -398,8 +395,7 @@ def expandy(ratio=0.03, ax=None):
     
     Args:
         ratio: Expand ratio. 0.0 for no expansion. 
-        ax: Axes object to which the label will be set. 
-            If `None`, the current Axes in `pyplot`. 
+        ax: Axes object to which the function operates. If `None`, the current Axes in `pyplot`. 
     """
     ax_ = _get_proper_axis(ax)
         
@@ -420,8 +416,15 @@ def expandy(ratio=0.03, ax=None):
         ax_.set_ylim(yl[0]-yw*ratio/asp, yl[1]+yw*ratio/asp)
 
 def log(axis="xy", b=True, ax=None):
-    """
+    """Sets/unsets log scale to x and/or y axes. 
+
+    This also sets the ticks nicely. 
     
+    Args:
+        axis: Axis (x and/or y) to be modified. "x", "y", or "xy". 
+        b: If `True`, the `axis` is changed to log scale. 
+            If `False`, the `axis` is changed to linear scale. 
+        ax: Axes object to which the function operates. If `None`, the current Axes in `pyplot`. 
     """
     ax_ = _get_proper_axis(ax)
     
@@ -475,8 +478,10 @@ def ticx(step="auto", minor=False, ax=None):
     """Sets the ticks nicely on linear-scaled x axis. 
 
     Args:
-        b: If `True`, set x axis to logscale. Otherwise, revert to linear scale. 
-        ax: Axes object to which the scale will be set. 
+        step: Tick spacing value. If "auto", automatic.
+        minor: If `False`, set the major ticks. If `True`, set the minor ticks. 
+            Defaults to `False` (major ticks). 
+        ax: Axes object to which the function operates. If `None`, the current Axes in `pyplot`. 
     """
     ax_ = _get_proper_axis(ax)
         
@@ -491,10 +496,17 @@ def ticx(step="auto", minor=False, ax=None):
         else:
             ax_.xaxis.set_major_locator(loc)
     elif sc == "log":
-        sys.stderr.write("ticxlog() when using log scale! \n")
+        raise ValueError("ticxlog() when using log scale!")
 
 def ticy(step="auto", minor=False, ax=None):
-    ''' set y axis tick interval '''
+    """Sets the ticks nicely on linear-scaled y axis. 
+
+    Args:
+        step: Tick spacing value. If "auto", automatic.
+        minor: If `False`, set the major ticks. If `True`, set the minor ticks. 
+            Defaults to `False` (major ticks). 
+        ax: Axes object to which the function operates. If `None`, the current Axes in `pyplot`. 
+    """
     ax_ = _get_proper_axis(ax)
     
     sc = ax_.get_yscale()
@@ -508,36 +520,16 @@ def ticy(step="auto", minor=False, ax=None):
         else:
             ax_.yaxis.set_major_locator(loc)
     elif sc == "log":
-        sys.stderr.write("Use ticylog() when using log scale! \n")
-
-def _calc_log_tics(base, lim):
-    
-    logx0 = np.log10(lim[0])/np.log10(base)
-    logx1 = np.log10(lim[1])/np.log10(base)
-        
-    if logx0 <= logx1:
-        logx0 = np.floor(logx0)
-        logx1 = np.ceil(logx1)
-        logw = logx1 - logx0
-        logx0 = logx0 - logw
-        logx1 = logx1 + logw
-    else:
-        logx0 = np.ceil(logx0)
-        logx1 = np.floor(logx1)
-        logw = logx0 - logx1
-        logx0 = logx0 + logw
-        logx1 = logx1 - logw
-        
-    logs = np.arange(logx0, logx1).astype(np.float)
-    tics = np.power(base, logs)
-    
-    mtics_basic = np.arange(1, 10).astype(np.float)
-    mtics = []
-    for tic in tics:
-        mtics.extend(tic * mtics_basic)
-    return tics, np.array(mtics)
+        raise ValueError("Use ticylog() when using log scale!")
 
 def ticxlog(numticks="every", ax=None):
+    """Sets the ticks nicely on log-scaled x axis. 
+
+    Args:
+        numticks: If an `int` value, sets the number of ticks to that value (as much as possible). 
+            If "every", the major ticks will be placed every decade. Defaults to "every". 
+        ax: Axes object to which the function operates. If `None`, the current Axes in `pyplot`. 
+    """
     ax_ = _get_proper_axis(ax)
     sc = ax_.get_xscale()
     if sc == "log":
@@ -560,9 +552,16 @@ def ticxlog(numticks="every", ax=None):
         # ax_.xaxis.set_ticks(mtics, minor=True)
         # ax_.set_xlim(*lim)
     elif sc == "linear":
-        sys.stderr.write("Use ticy() when using linear scale! \n")
+        raise ValueError("Use ticx() when using linear scale!")
 
 def ticylog(numticks="every", ax=None):
+    """Sets the ticks nicely on log-scaled y axis. 
+
+    Args:
+        numticks: If an `int` value, sets the number of ticks to that value (as much as possible). 
+            If "every", the major ticks will be placed every decade. Defaults to "every". 
+        ax: Axes object to which the function operates. If `None`, the current Axes in `pyplot`. 
+    """
     ax_ = _get_proper_axis(ax)
     sc = ax_.get_yscale()
     if sc == "log":
@@ -585,45 +584,52 @@ def ticylog(numticks="every", ax=None):
         # ax_.yaxis.set_ticks(mtics, minor=True)
         # ax_.set_ylim(*lim)
     elif sc == "linear":
-        sys.stderr.write("Use ticx() when using linear scale! \n")
-
-def autoscale(axis="both", ax=None):
-    ax_ = _get_proper_axis(ax)
-    
-    ax_.autoscale(axis=axis)
-    
-    if ax_.get_xscale() == "log":
-        ticxlog(ax=ax_)
-    if ax_.get_yscale() == "log":
-        ticylog(ax=ax_)
+        raise ValueError("Use ticy() when using linear scale!")
         
 #-------------------#
 # Get axes & figure #
 #-------------------#
 def gca():
+    """Gets the current `Axes` object. 
+
+    Shortcut for `pyplot.gca()`. 
+    """
     ax = pyplot.gca()
     assert isinstance(ax, axes.Axes)
     return ax
 
 def clf():
+    """Clears the current `Figure`. 
+
+    Shortcut for `pyplot.clf()`. 
+    """
     pyplot.clf()
 
 def cla():
+    """Clears the current `Axes`. 
+
+    Shortcut for `pyplot.cla()`. 
+    """
     pyplot.cla()
 
 #----------#
 # Plotting #
 #----------#
 def plot(*args, **kwargs):
+    """ Shortcut for `pyplot.plot()`
+    """
     return pyplot.plot(*args, **kwargs)
 
 def errorbar(*args, **kwargs):
+    """ Shortcut for `pyplot.errorbar()`
+    """
     return pyplot.errorbar(*args, **kwargs)
 
 #--------#
 # Legend #
 #--------#
 def legend(*axes_objects, **legendprops):
+
     liness = []
     labelss = []
     if axes_objects:
@@ -713,31 +719,95 @@ def delete_lines(*axes_objects):
 # utility #
 #---------#
 def get_colors(num, name="inferno"):
+    """Make a color series from a colormap. 
+
+    Args:
+        num: Number of colors to generate. 
+        name: Color map name registered in `matplotlib`. 
+
+    Returns:
+        A list of (r,g,b,a) arrays. 
+
+    Example:
+        >>> cs = snpl.get_colors(5)
+        >>> x = np.array([0.0, 1.0])
+        >>> y = np.array([1.0, 1.0])
+        >>> for i, c in enumerate(cs):
+        >>>     snpl.plot(x, y + i, color=c, marker="", ls="-")
+        >>> snpl.show()
+    """
     arr = np.linspace(0, 1, num)
     norm = colors.Normalize(arr[0], arr[-1])
     cmap = cm.ScalarMappable(norm=norm, cmap=name)
     return [cmap.to_rgba(v) for v in arr]
 
 def get_markers(num, symbols="osD^>v<XP"):
+    """Make a marker style series. 
+
+    This function makes a list of marker style characters of a given length. 
+    The marker styles are cyclic. 
+    For example, with the default `symbols`, 
+    >>> print(snpl.get_markers(11))
+    >>> ["o", "s", "D", "^", ">", "v", "<", "X", "P", "o", "s"]
+    Note that the pattern repeats after 10th item. 
+
+    Args:
+        num: Number of marker styles to generate. 
+        symbols: Repeat pattern of the symbols. 
+
+    Returns:
+        A list of strings. 
+
+    Example:
+        >>> cs = snpl.get_markers(5)
+        >>> x = np.array([0.0, 1.0])
+        >>> y = np.array([1.0, 1.0])
+        >>> for i, m in enumerate(ms):
+        >>>     snpl.plot(x, y + i, marker=m)
+        >>> snpl.show()
+    """
     syms = list(symbols)
     return [syms[j%len(syms)] for j in range(num)]
 
-def get_linestyles(num, styles=["-", ":", "--", "-."]):
+def _get_linestyles(num, styles=["-", ":", "--", "-."]):
     return [styles[j%len(styles)] for j in range(num)]
 
 def tint(c, f):
+    """Tint the given color. 
+    
+    Args:
+        c: The color to be tinted. 
+            Can be any color-like object that `matplotlib` accepts. 
+        f: Tinting degree. 0.0 = original color, 1.0 = white. 
+
+    Returns:
+        (r,g,b) tuple. 
+
+    Example:
+        >>> snpl.plot([0], [0], marker="o", color=snpl.tint("b", 0.0)) # blue
+        >>> snpl.plot([1], [1], marker="o", color=snpl.tint("b", 0.3)) # thin blue
+        >>> snpl.plot([2], [2], marker="o", color=snpl.tint("b", 0.6)) # very thin blue
+        >>> snpl.show()
+    """
     rgb = colors.to_rgb(c)
     return tuple([v + (1.0 - v)*f for v in rgb])
 
 def _get_proper_axis(ax=None):
+    """Internal function to get a proper `Axes` object. 
+
+    Args:
+        ax: If `None`, returns the current active `Axes` in `pyplot`. 
+            If `Axes` object, returns that object as-is. 
+    
+    Returns:
+        `Axes` object. 
+    """
     if ax:
         return ax
     else:
         return pyplot.gca()
 
-
-
-def isnan_multiple(*arrays):
+def _isnan_multiple(*arrays):
     truth = np.isnan(arrays[0])
     if len(arrays) > 1:
         for arr in arrays[1:]:
@@ -745,7 +815,7 @@ def isnan_multiple(*arrays):
     
     return truth
 
-def isinf_multiple(*arrays):
+def _isinf_multiple(*arrays):
     truth = np.isinf(arrays[0])
     if len(arrays) > 1:
         for arr in arrays[1:]:
@@ -753,89 +823,93 @@ def isinf_multiple(*arrays):
     
     return truth
 
-def iscropped(xarr, rangex):
-    return np.logical_and(min(rangex) <= xarr, xarr <= max(rangex) )
-
-def isincluded(xarr, rangex):
-    return np.logical_or(min(rangex) > xarr, xarr > max(rangex) )
-
-def removenans(*arrays):
-    '''
-    Removes nans from the input arrays with the same size. 
-    '''
-    truth = np.logical_not(isnan_multiple(*arrays))
-    inds = np.where(truth)
-    return [np.copy(arr[inds]) for arr in arrays]
-
-def removeinfs(*arrays):
-    truth = np.logical_not(isinf_multiple(*arrays))
-    inds = np.where(truth)
-    return [np.copy(arr[inds]) for arr in arrays]
-
-def cropper(xarr, rangex, *arrays, remove_nans=True, remove_infs=True):
+def _cropper(xarr, rangex, *arrays, remove_nans=True, remove_infs=True):
     
-    truth = iscropped(xarr, rangex)
+    truth = np.logical_and(min(rangex) <= xarr, xarr <= max(rangex) )
+
     if remove_nans:
-        truth = np.logical_and(truth, np.logical_not(isnan_multiple( *([xarr] + list(arrays)) )))
+        truth = np.logical_and(truth, np.logical_not(_isnan_multiple( *([xarr] + list(arrays)) )))
         
     if remove_infs:
-        truth = np.logical_and(truth, np.logical_not(isinf_multiple( *([xarr] + list(arrays)) )))
-    
-    return np.where(truth)
-
-def excluder(xarr, rangex, *arrays, remove_nans=True, remove_infs=True):
-
-    truth = isincluded(xarr, rangex)
-    if remove_nans:
-        truth = np.logical_and(truth, np.logical_not(isnan_multiple( *([xarr] + list(arrays)) )))
-        
-    if remove_infs:
-        truth = np.logical_and(truth, np.logical_not(isinf_multiple( *([xarr] + list(arrays)) )))
+        truth = np.logical_and(truth, np.logical_not(_isinf_multiple( *([xarr] + list(arrays)) )))
     
     return np.where(truth)
 
 def crop(xarr, rangex, *arrays, remove_nans=True, remove_infs=True):
-    inds = cropper(xarr, rangex, *arrays, remove_nans=remove_nans, remove_infs = remove_infs)
+    """Crop arrays to a given range. 
+
+    Args:
+        xarr: Key array. 
+        rangex: Range along the key array. 
+        *arrays: other arrays to be cropped. 
+        remove_nans: If `True`, `nan`s in any of the given arrays are removed. Defaults to `True`. 
+        remove_infs: If `True`, `inf`s in any of the given arrays are removed. Defaults to `True`. 
+
+    Returns:
+        Cropped arrays. 
+
+    Example:
+        >>> import numpy as np
+        >>> import snpl
+        >>> 
+        >>> x = np.arange(10).astype(float)
+        >>> y = x + 0.1
+        >>> z = x + 0.2
+        >>> print(x)
+        >>> [0. 1. 2. 3. 4. 5. 6. 7. 8. 9.]
+        >>> print(y)
+        >>> [0.1 1.1 2.1 3.1 4.1 5.1 6.1 7.1 8.1 9.1]
+        >>> print(z)
+        >>> [0.2 1.2 2.2 3.2 4.2 5.2 6.2 7.2 8.2 9.2]
+        >>> 
+        >>> xc, yc, zc = snpl.crop(x, [2.5, 6.0], y, z)
+        >>> print(xc)
+        >>> [3. 4. 5. 6.]
+        >>> print(yc)
+        >>> [3.1 4.1 5.1 6.1]
+        >>> print(zc)
+        >>> [3.2 4.2 5.2 6.2]
+    """
+    inds = _cropper(xarr, rangex, *arrays, remove_nans=remove_nans, remove_infs = remove_infs)
     
     allarrays = [xarr] + list(arrays)
     
     return [np.copy(arr[inds]) for arr in allarrays]
-
- 
-def exclude(xarr, rangex, *arrays, remove_nans=True, remove_infs=True):
-
-    inds = excluder(xarr, rangex, *arrays, remove_nans=remove_nans, remove_infs = remove_infs)
-    
-    allarrays = [xarr] + list(arrays)
-    
-    return [np.copy(arr[inds]) for arr in allarrays]
- 
-def cut(xarr, yarr, rangex):
-    assert len(rangex) == 2
-        
-    xarr_, yarr_ = removenans(xarr, yarr)
-        
-    inds = cutter(xarr_, rangex)
-    
-    return np.copy(xarr_[inds]), np.copy(yarr_[inds])
-
-
-def cutter(xarr, rangex):
-    '''
-    Not compatible with arrays containing NaNs. 
-    First remove NaNs with removenans(). 
-    '''
-    return np.where(np.logical_and(min(rangex) <= xarr, xarr <= max(rangex) ))
-
 
 #--------------#
 # text/drawing #
 #--------------#
 def draw_powerlaw(xi=1e0, xf=1e1, yi=1e0, exponent=1.0, ax=None, **lineprops):
+    """Draw a power-law guide line in the log-log plot. 
+
+    This function uses `Axes.plot()` to draw a guide line of a power law with a given exponent. 
+    
+    Args:
+        xi: x coordinate of the start point of the guide line. 
+        xf: x coordinate of the end point of the guide line. 
+        yi: y coordinate of the start point of the guide line. 
+        exponent: Exponent of the power law, i.e., slope of the line. 
+        ax: Axes object to which the function operates. If `None`, the current Axes in `pyplot`. 
+        lineprops: `kwargs` passed to `Axes.plot()`. 
+        
+    Returns:
+        The created `Line2D` object. 
+    """
     ax_ = _get_proper_axis(ax)
     return ax_.plot([xi, xf], [yi, yi*np.power(xf/xi, exponent)], **lineprops)[0]
 
 def text_corner(s, x=0.03, y=0.90, ax=None):
+    """Add a text in the canvas. 
+    
+    Args:
+        s: Text. 
+        x: x position. Fraction of the plot area width. 
+        y: y position. Fraction of the plot area height. 
+        ax: Axes object to which the function operates. If `None`, the current Axes in `pyplot`. 
+    
+    Returns:
+        The created `Text` object. 
+    """
     if not ax:
         a = pyplot.gca()
     else:
@@ -877,10 +951,11 @@ def arrow_edge(height, side="left", len_rel=0.1, ax=None, text="", **arrowprops)
                       arrowprops=arrowprops)
 
 def axvline(*args, **kwargs):
+    """Shortcut to `pyplot.axvline()`
+    """
     return pyplot.axvline(*args, **kwargs)
 
 def axhline(*args, **kwargs):
+    """Shortcut to `pyplot.axhline()`
+    """
     return pyplot.axhline(*args, **kwargs)
-
-if __name__ == "__main__":
-    pass

@@ -1,9 +1,6 @@
 # coding=utf-8
-'''
-Created on Sep 4, 2018
-
-@author: snakagawa
-'''
+"""I/O interfaces for tensile test data
+"""
 
 import hicsv
 import csv
@@ -107,10 +104,29 @@ def _load_Trapezium_from_blocks(blocks):
 
 
 def load_TrapeziumCSV(fp, encoding="shift-jis", dialect="excel"):
-    '''Loads a CSV file and returns a list of hicsv.hicsv objects for each test pieces (batches). 
+    '''Loads a CSV file exported by Trapezium software. 
 
-    setting dialect="excel-tab" enables loading a tab-delimited values (TSV). 
     Works both for Trapezium 3 (for AGS-X) and Trapezium 2 (for EZ-L). 
+
+    Args:
+        fp (str or file-like): Path or file-like object of the source CSV file. 
+        encoding (str): Encoding of the source file. Defaults to shift-jis. 
+        dialect (str): Dialect of the CSV to be read. Defaults to ``excel`` (comma-delimited).
+            Setting to ``excel-tab`` enables loading a tab-delimited values (TSV).  
+
+    Returns:
+        A list of ``hicsv.hicsv`` objects for each test pieces (batches). 
+
+    Note:
+        This function is compatible with the data collected with "Single" and "Control" programs 
+        in the Trapezium software, but not with "Cycle" program. 
+        For the data collected with "Cycle" program, use ``load_TrapeziumCycleCSV``. 
+
+    Examples:
+        >>> ds = tensile.load_TrapeziumCSV("trapezium_csv.csv")
+        >>> 
+        >>> for d in ds:
+        >>>     d.save("piece " + c.h["名前"] + ".txt") # save each batch using the batch name as the file name
     '''
     if isinstance(fp, str):
         with open(fp, "r", newline="", encoding=encoding) as f:
@@ -139,6 +155,32 @@ def load_TrapeziumCSV(fp, encoding="shift-jis", dialect="excel"):
     return _load_Trapezium_from_blocks(blocks)
 
 def load_TrapeziumCycleCSV(fp, encoding="shift-jis", initial_cycle_id=0, dialect="excel"):
+    """Loads a cycle CSV file exported by Trapezium software. 
+
+    To discriminate between the cycles, each cycle will be given a unique and consequtive 
+    "Cycle ID", usually starting from zero. 
+
+    Args:
+        fp (str or file-like): Path or file-like object of the source CSV file. 
+        encoding (str): Encoding of the source file. Defaults to shift-jis. 
+        initial_cycle_id (int): Index of the first cycle. 
+            This integer number will be used as the "Cycle ID" of the first cycle. 
+        dialect (str): Dialect of the CSV to be read. Defaults to ``excel`` (comma-delimited).
+            Setting to ``excel-tab`` enables loading a tab-delimited values (TSV).  
+
+    Returns:
+        A list of ``hicsv.hicsv`` objects for each cycle. 
+
+    Note:
+        This function is not compatible with the data collected with "Single" and "Control" programs 
+        in the Trapezium software. For these cases, use ``load_TrapeziumCSV``. 
+
+    Examples:
+        >>> ds = tensile.load_TrapeziumCSV("trapezium_cycle.csv")
+        >>> 
+        >>> for d in ds:
+        >>>     d.save("piece " + c.h["Cycle ID"] + ".txt") # save each cycle using the cycle id as the file name
+    """
     if isinstance(fp, str):
         with open(fp, "r", newline="", encoding=encoding) as f:
             lines = f.readlines()

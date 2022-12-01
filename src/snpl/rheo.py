@@ -1,9 +1,6 @@
 # coding=utf-8
-'''
-Created on 2018/02/18
-
-@author: snakagawa
-'''
+"""I/O interfaces and utilities for various rheology data. 
+"""
 
 import numpy as np
 import hicsv
@@ -54,7 +51,25 @@ KEYS_GEOMETRY = {1001: "shear rate factor",
 GTYPE_CP = bytearray([255, 255, 4, 0, 3, 0])
 GTYPE_PP = bytearray([255, 255, 0, 0, 2, 0])
 
-def load_RheologyAdvantageData(fp, encoding="utf-16"):
+def load_RheologyAdvantageBinary(fp, encoding="utf-16"):
+    """Loads a RheologyAdvantage raw data (.rsl) file into a list of ``hicsv.hicsv`` objects. 
+    
+    Args:
+        fp (str or file-like): Path or file-like object of the source file. 
+        encoding (str): Encoding of the unicode strings in the source file. Defaults to utf-16. 
+
+    Returns:
+        A list of ``hicsv.hicsv`` objects, each representing one step. 
+
+    Examples:
+        >>> ds = snpl.rheo.load_RheologyAdvantageData("test_data-0001o.rsl")
+        >>> print(ds[0].keys)
+        ['frequency [Hz]', 'time [s]', ... ,'normal force [N]', 'gap [um]']
+
+    Note:
+        Currently, (mostly) only the geometry info is available. 
+        Additional header info may be obtained in the future update. 
+    """
     
     if isinstance(fp, str):
         src = os.path.realpath(fp)
@@ -102,7 +117,7 @@ def load_RheologyAdvantageData(fp, encoding="utf-16"):
             if not f.exists(path):
                 break
             
-            c = snpl.data.CSV()
+            c = hicsv.hicsv()
             
             with f.openstream(path) as s:
                 s.seek(6)
@@ -139,7 +154,7 @@ def load_RheologyAdvantageData(fp, encoding="utf-16"):
                     
                     arr = struct.unpack("{0:d}f".format(N), s.read(N*4))
                     
-                    c.set_column(key, arr)
+                    c.append_column(key, np.array(arr))
                 
                 num += 1
             
@@ -154,9 +169,9 @@ def load_RheologyAdvantageData(fp, encoding="utf-16"):
 
 # def calc_RheoAdvantage_CompModulus():
 
-def calc_RheologyAdvantageSteadyViscosity(fp):
+def _calc_RheologyAdvantageSteadyViscosity(fp):
     
-    c = snpl.data.CSV(fp)
+    c = hicsv.hicsv(fp)
     
     if c.h["Geometry type"] == "CP":
         R_m = c.h["Diameter [m]"]/2.0
@@ -186,9 +201,71 @@ def calc_RheologyAdvantageSteadyViscosity(fp):
     
     return c
 
+def _parse_headerblock_RheologyAdvantageExported(lines):
+    h = {}
+    current_key = ""
+    for l in lines:
+        k, v = l.split("\t", 1)
+        if k: # this is the normal case
+            current_key = k
+            h[k] = v
+        else: # when the current line starts from tab, it belongs to the parent entry
+            current_value = h[current_key]
+            if isinstance(current_value, list):
+                current_value.append(v)
+            else:
+                current_value = [current_value, v]
+                h[current_key] = current_value
+    
+    return h
 
+def _parse_table_RheologyAdvantageExported(lines):
 
-def load_RheologyAdvantageExportedSingleStep(fp, encoding="shift-jis"):
+    rawkeys = lines[0].strip().split("\t")
+    units = lines[1].strip().split("\t")
+    
+    keys = []
+    
+    for k, u in zip(rawkeys, units):
+        if u:
+            keys.append("{0} [{1}]".format(k.replace("'", "′"), u))
+        else:
+            keys.append(k)
+    
+    out = hicsv.hicsv()
+    
+    rows = []
+    for l_ in lines[2:]:
+        l = l_.strip()
+        if not l:
+            break
+        
+        rows.append([float(v) for v in l.split("\t")])
+
+    rows = np.array(rows)
+    cols = np.transpose(rows)
+
+    return keys, cols
+    
+def load_RheologyAdvantageExported(fp, encoding="shift-jis"):
+    """Loads a text file exported by RheologyAdvantage software. 
+
+    Only compatible with the exported files with "full" header info. 
+
+    Args:
+        fp (str or file-like): Path or file-like object of the source text file. 
+        encoding (str): Encoding of the source file. Defaults to shift-jis. 
+
+    Returns:
+        A list of ``hicsv.hicsv`` objects, each corresponding to one step in the experiment. 
+        Only the steps whose data table appears in the source file will be included. 
+        That is, the steps without a table is ignored. 
+
+    Examples:
+        >>> ds = snpl.rheo.load_RheologyAdvantageExported("test data-0001o exp.txt")
+        >>> for d in ds:
+        >>>     d.save(d.h["Step name"] + ".txt") # save available steps, using the step name as the file name
+    """
     
     if isinstance(fp, str):
         with open(fp, "r", newline="", encoding=encoding) as f:
@@ -196,46 +273,79 @@ def load_RheologyAdvantageExportedSingleStep(fp, encoding="shift-jis"):
     else:
         lines = fp.readlines()
 
-    # get step names
-    stepnames = []
-    for l in lines:
-        if l.startswith("Step name\t"):
-            stepname = l.strip().split("\t")[1]
-            stepnames.append(stepname)
-    
-    # find the step in the stepnames, found first
-    i0 = 0
-    for i, l in enumerate(lines):
-        if l.strip() in stepnames:
-            i0 = i
-            break
-        
-    keys = lines[i0+2].strip().split("\t")
-    units = lines[i0+3].strip().split("\t")
-    
-    kus = []
-    
-    for k, u in zip(keys, units):
-        if u:
-            kus.append("{0} [{1}]".format(k.replace("'", "′"), u))
+    blocks = []
+    block = []
+    for line in lines:
+        line_ = line.rstrip("\n\r")
+        if not line_:
+            if block:
+                blocks.append(block)
+                block = []
+            else:
+                pass # ignore more than two empty lines
         else:
-            kus.append(k)
+            block.append(line_)
     
-    out = snpl.data.CSV()
-    for key in kus:
-        out.append_column(key, [])
+    # for block in blocks:
+    #     print(block[0])
     
-    for l_ in lines[i0+5:]:
-        l = l_.strip()
-        if not l:
-            break
-        
-        out.append_row([float(v) for v in l.split("\t")])
+    # find the procedure name & step name
+    blocknumber_sample = 0
+    blocknumber_proc = 0
+    blocknumbers_step = []
+    blocknumber_geometry = 0
+    for blocknumber, block in enumerate(blocks):
+        if block[0].startswith("Procedure name\t"):
+            blocknumber_proc = blocknumber
+        elif block[0].startswith("Step name\t"):
+            blocknumbers_step.append(blocknumber)
+        elif block[0].startswith("Geometry name\t"):
+            blocknumber_geometry = blocknumber
+        elif block[0].startswith("Sample name\t"):
+            blocknumber_sample = blocknumber
     
-    return out
+    blocknumber_inst = blocknumber_geometry + 1 # this may not always be true...
+    
+    h_sample = _parse_headerblock_RheologyAdvantageExported(blocks[blocknumber_sample])
+    h_proc = _parse_headerblock_RheologyAdvantageExported(blocks[blocknumber_proc])
+    h_geometry = _parse_headerblock_RheologyAdvantageExported(blocks[blocknumber_geometry])
+    h_inst = _parse_headerblock_RheologyAdvantageExported(blocks[blocknumber_inst])
+    hs_step = []
+    for bn in blocknumbers_step:
+        h = _parse_headerblock_RheologyAdvantageExported(blocks[bn])
+        hs_step.append(h)
+
+    outs = []
+    # parse tables
+    for h_step in hs_step:
+        stepname = h_step["Step name"]
+        bn_start = 0
+        for bn, block in enumerate(blocks):
+            if block[0] == stepname:
+                bn_start = bn
+                break
+        if bn_start:
+            keys, cols = _parse_table_RheologyAdvantageExported(blocks[bn_start + 1] + blocks[bn_start + 2])
+            out = hicsv.hicsv()
+            for key, col in zip(keys, cols):
+                if key not in out.keys:
+                    out.append_column(key, col)
+            
+            out.h["Experiment Info"] = h_sample
+            out.h["Procedure Info"] = h_proc
+            out.h["Geometry Info"] = h_geometry
+            out.h["Instrument Info"] = h_inst
+            out.h["Step Info"] = h_step
+            out.h["Step name"] = stepname
+            
+            outs.append(out)
+        else:
+            pass
+    
+    return outs
 
 
-def load_Physica501CSV(fp, sep=",", encoding="shift-jis"):
+def _load_Physica501CSV(fp, sep=",", encoding="shift-jis"):
     
     if isinstance(fp, str):
         with open(fp, "r", newline="", encoding=encoding) as f:
@@ -280,7 +390,7 @@ def load_Physica501CSV(fp, sep=",", encoding="shift-jis"):
         units = dlines[1]
         dlines = [ [e for e in l.split(sep) if e] for l in dlines]
         
-        csv = snpl.data.CSV()
+        csv = hicsv.hicsv()
         keys = dlines[0]
         
         for k in keys:
@@ -318,7 +428,7 @@ def load_Physica501CSV(fp, sep=",", encoding="shift-jis"):
         
 
 
-def load_RheoCompassText(fp, sep=",", encoding="utf-16"):
+def _load_RheoCompassText(fp, sep=",", encoding="utf-16"):
     '''
     Not compatible with the tests having multiple intervals!
     '''
@@ -404,7 +514,7 @@ def load_RheoCompassText(fp, sep=",", encoding="utf-16"):
         
         column_mapping = [keys_comp.tolist().index(uk) for uk in keys_unique]
         
-        csv = snpl.data.CSV()
+        csv = hicsv.hicsv()
         for k in keys_unique:
             csv.append_column(k, [])
         
@@ -434,13 +544,13 @@ def load_RheoCompassText(fp, sep=",", encoding="utf-16"):
 
 
 
-def load_Physica501Table(fp):
-    tab = Physica501Table(fp)
+def _load_Physica501Table(fp):
+    tab = _Physica501Table(fp)
     
     return tab.get_CSV()
     
 
-class Physica501Table(object):
+class _Physica501Table(object):
     
     def __init__(self, fp="", delay_sec=0.0):
         
@@ -528,18 +638,4 @@ class Physica501Table(object):
         return t
 
 if __name__ == '__main__':
-    # r = load_Physica501CSV("./test/rheo/20199725_Someya_good.txt", sep="\t")
-    # print(len(r))
-    
-    # rc = load_RheoCompassText("./test/rheo/RheoCompass_20191225_someya.txt", sep="\t")
-    # [d.write("./test/rheo/" + d.h["Test name"] + ".txt") for d in rc]
-    
-    # cs = load_RheoAdvantage("test/rheo/RheologyAdvantage/20200311_JS100_PP20_20C_jump_70C-0013f.rsl")
-    # cs = load_RheologyAdvantageData("test/rheo/RheologyAdvantage/20200313_paraffin_35C-0000f.rsl")
-    # 
-    # for c in cs:
-    #     with open("test/rheo/RheologyAdvantage/test_{0}.txt".format(c.h["Step number"]), "w", encoding="utf-8") as f:
-    #         c.write(f)
-            
-    "test/rheo/RheologyAdvantage/test_1.txt"
-    
+    pass

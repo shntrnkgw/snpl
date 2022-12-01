@@ -12,8 +12,8 @@ import json
 def load_ExportOmniSECReveal(src_curves, src_measinfo="guess", srcs_peakres="guess"):
     '''Loads text files exported by ``__ExportOmniSEC.py`` into a ``hicsv`` object. 
 
-    OmniSEC (the newer software for Reveal detector) has only a very limited 
-    functionality to export the chromatography data. 
+    OmniSEC (the newer software for the Reveal detector) has only a very limited 
+    functionality to export the chromatography data (which is pretty frustrating). 
     The original author of this code (SN) developed a script ``__ExportOmniSEC.py``
     to semi-automatically export the data in a handy text format. 
 
@@ -25,10 +25,10 @@ def load_ExportOmniSECReveal(src_curves, src_measinfo="guess", srcs_peakres="gue
     This function loads these files and combine them into a single ``hicsv`` object. 
 
     Args:
-        src_curves: Path to the curve data file. Mandatory. 
-        src_measinfo: Path to the MeasInfo file. If it is set to "guess", the function
+        src_curves (str): Path to the curve data file. Mandatory. 
+        src_measinfo (str): Path to the MeasInfo file. If it is set to "guess", the function
             infers the path from ``src_curves``. 
-        srcs_peaks: Path(s) to the PeakResults file. If it is set to "guess", 
+        srcs_peaks (str or list): Path(s) to the PeakResults file. If it is set to "guess", 
             the function infers the path(s) from ``src_curves``. 
             Otherwise, if it is a single string representing a path, 
             it is treated as the only associated PeakResults file. 
@@ -145,9 +145,9 @@ def load_LabSolutionsAscii(fp, sep="\t", target="[LC Chromatogram"):
     and returns it as a convenient ``hicsv`` object. 
 
     Args:
-        fp: path to the file or file-like object. 
-        sep: delimiter used in the ASCII file. Usually a tab. 
-        target: the beginning of the block of interest. 
+        fp (str or file-like): path to the file or file-like object. 
+        sep (str): delimiter used in the ASCII file. Usually a tab. 
+        target (str): the beginning of the block of interest. 
 
     Returns:
         a ``hicsv.hicsv`` object. 

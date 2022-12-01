@@ -1,14 +1,38 @@
 # coding=utf-8
-'''
-Created on Aug 26, 2020
+"""I/O interfaces for UV-vis spectrum files
+"""
 
-@author: snakagawa
-'''
-
-from snpl import data
+import hicsv
 import datetime
+import numpy as np
 
-def load_HitachiAscii(fp, encoding="shift-jis"):
+def load_HitachiTXT(fp, encoding="shift-jis"):
+    """Loader for a text file exported from Hitachi UV-vis spectrometer software. 
+
+    This function loads a text file exported from Hitachi UV-vis spectrometer
+    and converts it into a hicsv format. 
+
+    Args:
+        fp (str or file-like): Path or file-like object of the source .TXT file. 
+        encoding (str): Encoding of the source file. Defaults to shift-jis. 
+
+    Returns:
+        A ``hicsv.hicsv`` object. Contains columns for wavelength and absorbance. 
+        The header only includes the time of measurement. 
+
+    Examples:
+        >>> c = snpl.uvvis.load_HitachiTXT("HitachiTest.TXT")
+        >>> print(c.ga("nm"))
+        [500. 498. 496. ... 204. 202. 200.]
+        >>> print(c.ga("Abs"))
+        [-1.500e-02 -1.500e-02 -1.500e-02 ...  4.519e+00  4.322e+00  4.250e+00]
+        >>> print(c.h["datetime"])
+        2020-08-13T21:24:32
+        >>> print(c.h["timestamp"])
+        1597321472.0
+        >>> c.save("HitachiTest_out.txt")
+    
+    """
     
     if isinstance(fp, str):
         # regard fp as a path
@@ -30,6 +54,7 @@ def load_HitachiAscii(fp, encoding="shift-jis"):
     
     dt = datetime.datetime.strptime(dt_string, "%H:%M:%S %m/%d/%Y")
     
+    timestring = dt.isoformat()
     timestamp = dt.timestamp()
     
     for i, l in enumerate(lines):
@@ -38,12 +63,11 @@ def load_HitachiAscii(fp, encoding="shift-jis"):
     
     lines = [l.strip() for l in lines[i+1:]]
     
-    head = lines.pop(0).split("\t") # column headers
+    keys = lines.pop(0).split("\t") # column headers
     
-    out = data.CSV()
-    for h in head:
-        out.append_column(h, [])
     
+    
+    rows = []
     for l in lines:
         if not l:
             continue
@@ -54,12 +78,19 @@ def load_HitachiAscii(fp, encoding="shift-jis"):
             except ValueError:
                 pass
             else:
-                out.append_row(values)
+                rows.append(values)
     
+    rows = np.array(rows)
+    cols = np.transpose(rows)
+    
+    out = hicsv.hicsv()
+    for key, col in zip(keys, cols):
+        out.append_column(key, col)
+
     out.h["timestamp"] = timestamp
+    out.h["datetime"] = timestring
     
     return out
 
 if __name__ == '__main__':
-    c = load_HitachiAscii("test/uvvis/HitachiAsciiTest.TXT")
-    print(c.ga(0, 1))
+    pass

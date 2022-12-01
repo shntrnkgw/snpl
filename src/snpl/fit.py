@@ -1,9 +1,10 @@
 # coding=utf-8
-'''
-Created on 2018/02/18
+"""Utilities for curve fitting analyses
 
-@author: snakagawa
-'''
+Note:
+    This module is not really useful anymore. 
+    It is encouraged to use directly the ``scipy.optimize`` package instead. 
+"""
 
 import glob
 import sys
@@ -129,14 +130,8 @@ def AreaPseudoVoigt(p):
                      )
 
 class Function(object):
-    '''
-    A class for function. 
-    Holds expression of the function, parameters, 
-    and info as to which parameter is locked/shared. 
-    
-    20160930 added Bound(). 
-    20170130 added parameter "hedaers" to __init__(). 
-    '''
+    """
+    """
     
     def __init__(self, expr, params, share=[], lock=[], headers=[], **lineprops):
         '''

@@ -21,6 +21,7 @@ class GwyddionSimpleField(object):
 
     Attributes:
         h (dict): header. 
+
             - "XRes": pixel number along the x axis. 
             - "YRes": pixel number along the y axis. 
             - "XReal": real length of the image along the x axis (in meter). 
@@ -30,6 +31,7 @@ class GwyddionSimpleField(object):
             - "Title": title string. 
             - "XYUnits": string describing the unit. (usually m (meter)). 
             - "ZUnits": string describing the unit. (usually m (meter)). 
+
         x (numpy.ndarray): 1-d array of the x-coordinates along x axis. 
         y (numpy.ndarray): 1-d array of the y-coordinates along y axis. 
         zmat (numpy.ndarray): 2-d array of the z data (height, phase angle, etc)
@@ -39,6 +41,8 @@ class GwyddionSimpleField(object):
 
     Example:
         >>> d = afm.GwyddionSimpleField("test.gsf")
+        >>> pyplot.pcolormesh(d.xmat, d.ymat, d.zmat, shading="nearest")
+        >>> pyplot.show()
         >>> d.save("save_test.gsf")
     '''
     
@@ -284,6 +288,12 @@ def load_xq(fp, ztype="auto"):
 
     Returns:
         a ``GwyddionSimpleField`` object. 
+
+    Examples:
+        >>> d = afm.load_xq("test_afm_raw_data_file.xqdx")
+        >>> pyplot.pcolormesh(d.xmat, d.ymat, d.zmat, shading="nearest")
+        >>> pyplot.show()
+        >>> d.save("test_afm_saved_data.gjf") # save it as a Gwyddion Simple Field format
         
     '''
     if isinstance(fp, str):
@@ -309,9 +319,38 @@ def load_xq(fp, ztype="auto"):
     return d
 
 
-def row_background_polynominal(xmat, ymat, zmat, polydeg=1, mask=None, preserve_height=True):
-    '''
-    @param mask: truth array with the same shape as zmat
+def row_background_polynomial(xmat, zmat, polydeg=1, mask=None):
+    '''Calculates polynomial background for each scan row. 
+
+    Performs polynomial fitting to each row in ``zmat``. 
+    This is one of the basic method to correct for the mismatch between scan lines
+    and the curving of each scan line. 
+
+    Args:
+        xmat (numpy.ndarray): 2-d array of x coordinates. 
+        zmat (numpy.ndarray): 2-d array of z coordinates (e.g., height)
+        polydeg (int): Degree of polynomial used in the fitting. 
+            Must be a non-negative integer. Defaults to 1. 
+        mask (numpy.ndarray or None): A 2-d truth array 
+            specifying which points to use in the fitting. 
+            If `None`, all points will be used. Defaults to `None`. 
+
+    Returns:
+        A 2-d ``numpy.ndarray`` with the same size as ``zmat``. 
+
+    Examples:
+        >>> d = afm.load_xq("test_data.xqdx")
+        >>> xmat = d.xmat*1e6
+        >>> ymat = d.ymat*1e6
+        >>> zmat = d.zmat*1e6
+        >>> 
+        >>> mask = np.logical_or(xmat < 2.5, 16.0 < xmat) # mask a part of the image
+        >>> zbmat = afm.row_background_polynomial(xmat, zmat, polydeg=1, mask=mask)
+        >>> 
+        >>> pyplot.gca().set_aspect("equal")
+        >>> pyplot.pcolormesh(xmat, ymat, zmat - zbmat)
+        >>> pyplot.colorbar()
+        >>> pyplot.show()
     '''
     
     zbmat = np.zeros_like(zmat)
@@ -339,11 +378,8 @@ def row_background_polynominal(xmat, ymat, zmat, polydeg=1, mask=None, preserve_
         zp = poly(x)
         
         zbmat[i] = zp
-    
-    if preserve_height:
-        return zbmat - np.mean(zbmat) # subtract the mean to preserve overall height
-    else:
-        return zbmat
+
+    return zbmat 
 
 
 if __name__ == '__main__':
