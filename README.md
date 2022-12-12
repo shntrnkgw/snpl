@@ -10,3 +10,6 @@ PyPI and conda-forge. Please install from the source files on GitHub.
 
     $ pip install git+https://github.com/shntrnkgw/snpl
 
+Or if you do not have Git installed, 
+
+    $ pip install https://github.com/shntrnkgw/snpl/archive/refs/heads/main.zip
