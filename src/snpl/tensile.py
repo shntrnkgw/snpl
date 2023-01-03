@@ -6,7 +6,7 @@ import hicsv
 import csv
 import numpy as np
 
-def str2number(string):
+def _str2number(string):
     if string.isdigit():
         return int(string)
     else:
@@ -24,7 +24,7 @@ def _load_Trapezium_from_blocks(blocks):
     # header
     keys = blocks[0][0]
     values = blocks[0][1]
-    values = [str2number(v) for v in values]
+    values = [_str2number(v) for v in values]
     
     h = {k: v for k, v in zip(keys, values)}
     
@@ -50,7 +50,7 @@ def _load_Trapezium_from_blocks(blocks):
     keys_testpiece = [k + " [{0}]".format(u) for k, u in zip(keys, units)]
     values_testpiece = []
     for row in blocks[skip+1][4:]:
-        values_testpiece.append([str2number(v) for v in row[1:]])
+        values_testpiece.append([_str2number(v) for v in row[1:]])
     
     
     num_batches = len(blocks[skip+1][4:])
@@ -61,7 +61,7 @@ def _load_Trapezium_from_blocks(blocks):
 
     values_property = []
     for row in blocks[skip+2][4:4+num_batches]:
-        values_property.append([str2number(v) for v in row[1:]])
+        values_property.append([_str2number(v) for v in row[1:]])
     
     csvs = []
     for i in range(num_batches):
@@ -89,7 +89,7 @@ def _load_Trapezium_from_blocks(blocks):
         rows = []
         for row in datablock[3:]:
             valid_row = [row[j] for j in valid_columns]
-            rows.append([str2number(s) for s in valid_row])
+            rows.append([_str2number(s) for s in valid_row])
         
         cols = list(zip(*rows))
 
@@ -201,7 +201,7 @@ def load_TrapeziumCycleCSV(fp, encoding="shift-jis", initial_cycle_id=0, dialect
     # header
     keys = blocks[0][0]
     values = blocks[0][1]
-    values = [str2number(v) for v in values]
+    values = [_str2number(v) for v in values]
     
     h = {k: v for k, v in zip(keys, values)}
     
@@ -215,7 +215,7 @@ def load_TrapeziumCycleCSV(fp, encoding="shift-jis", initial_cycle_id=0, dialect
     keys = blocks[1][2][1:]
     units = blocks[1][3][1:]
     keys_testpiece = [k + " [{0}]".format(u) for k, u in zip(keys, units)]
-    values_testpiece = [str2number(v) for v in blocks[1][4][1:]]
+    values_testpiece = [_str2number(v) for v in blocks[1][4][1:]]
     
     # num_batches = len(blocks[1][4:])
         
@@ -225,7 +225,7 @@ def load_TrapeziumCycleCSV(fp, encoding="shift-jis", initial_cycle_id=0, dialect
 
     values_property = []
     for row in blocks[2][4:4+num_cycles]:
-        values_property.append([str2number(v) for v in row[1:]])
+        values_property.append([_str2number(v) for v in row[1:]])
             
     csvs = []
     for i in range(num_cycles):
@@ -246,7 +246,7 @@ def load_TrapeziumCycleCSV(fp, encoding="shift-jis", initial_cycle_id=0, dialect
         
         rows = []
         for row in datablock[3:]:
-            rows.append([str2number(s) for s in row])
+            rows.append([_str2number(s) for s in row])
         
         cols = list(zip(*rows))
 

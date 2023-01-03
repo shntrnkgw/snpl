@@ -1,0 +1,467 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snpl.afm &#8212; snpl 0.3.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinxdoc.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">snpl 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../snpl.html" accesskey="U">snpl</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">snpl.afm</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for snpl.afm</h1><div class="highlight"><pre>
+<span></span><span class="c1"># coding=utf-8</span>
+<span class="sd">&#39;&#39;&#39;I/O interface utilities for AFM (atomic force microscope) images. </span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+
+<span class="n">MAGIC_LINE</span> <span class="o">=</span> <span class="s2">&quot;Gwyddion Simple Field 1.0&quot;</span>
+
+<span class="n">HFIELDS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;XRes&quot;</span><span class="p">,</span> <span class="s2">&quot;YRes&quot;</span><span class="p">,</span> <span class="s2">&quot;XReal&quot;</span><span class="p">,</span> <span class="s2">&quot;YReal&quot;</span><span class="p">,</span> <span class="s2">&quot;XOffset&quot;</span><span class="p">,</span> <span class="s2">&quot;YOffset&quot;</span><span class="p">,</span> <span class="s2">&quot;Title&quot;</span><span class="p">,</span> <span class="s2">&quot;XYUnits&quot;</span><span class="p">,</span> <span class="s2">&quot;ZUnits&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GwyddionSimpleField"><a class="viewcode-back" href="../../snpl.afm.html#snpl.afm.GwyddionSimpleField">[docs]</a><span class="k">class</span> <span class="nc">GwyddionSimpleField</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Read/write interface for Gwyddion Simple Field format. </span>
+
+<span class="sd">    See http://gwyddion.net/documentation/user-guide-en/gsf.html for specifications. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        fp: Source file (path or file-like object). </span>
+<span class="sd">            If None, create an empty object. </span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        h (dict): header. </span>
+
+<span class="sd">            - &quot;XRes&quot;: pixel number along the x axis. </span>
+<span class="sd">            - &quot;YRes&quot;: pixel number along the y axis. </span>
+<span class="sd">            - &quot;XReal&quot;: real length of the image along the x axis (in meter). </span>
+<span class="sd">            - &quot;YReal&quot;: real length of the image along the y axis (in meter). </span>
+<span class="sd">            - &quot;XOffset&quot;: offset to the x coordinates. </span>
+<span class="sd">            - &quot;YOffset&quot;: offset to the y coordinates. </span>
+<span class="sd">            - &quot;Title&quot;: title string. </span>
+<span class="sd">            - &quot;XYUnits&quot;: string describing the unit. (usually m (meter)). </span>
+<span class="sd">            - &quot;ZUnits&quot;: string describing the unit. (usually m (meter)). </span>
+
+<span class="sd">        x (numpy.ndarray): 1-d array of the x-coordinates along x axis. </span>
+<span class="sd">        y (numpy.ndarray): 1-d array of the y-coordinates along y axis. </span>
+<span class="sd">        zmat (numpy.ndarray): 2-d array of the z data (height, phase angle, etc)</span>
+<span class="sd">        xmat (numpy.ndarray): 2-d array of the x coordinates. </span>
+<span class="sd">        ymat (numpy.ndarray): 2-d array of the y coordinates. </span>
+<span class="sd">        path (str): path to the source file, if any. </span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; d = afm.GwyddionSimpleField(&quot;test.gsf&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; pyplot.pcolormesh(d.xmat, d.ymat, d.zmat, shading=&quot;nearest&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; pyplot.show()</span>
+<span class="sd">        &gt;&gt;&gt; d.save(&quot;save_test.gsf&quot;)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fp</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        
+        <span class="c1"># default members</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;XRes&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;YRes&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;XReal&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">&quot;YReal&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">&quot;XOffset&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">&quot;YOffset&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zmat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xmat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ymat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="n">fp</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">load_from_binary</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">fp</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">load_from_binary</span><span class="p">(</span><span class="n">fp</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+            
+<div class="viewcode-block" id="GwyddionSimpleField.load_from_binary"><a class="viewcode-back" href="../../snpl.afm.html#snpl.afm.GwyddionSimpleField.load_from_binary">[docs]</a>    <span class="k">def</span> <span class="nf">load_from_binary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bindata</span><span class="p">):</span>        
+        <span class="c1"># search for the first linefeed</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">bindata</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="mh">0x0a</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="c1"># see if the first line matches with the magic line</span>
+        <span class="k">if</span> <span class="n">bindata</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="n">MAGIC_LINE</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Not a valid Gwyddion Simple Field file&quot;</span><span class="p">)</span>
+            
+        <span class="c1"># search for the first null byte</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">bindata</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="mh">0x00</span><span class="p">:</span>
+                <span class="k">break</span>
+        
+        <span class="n">header_end</span> <span class="o">=</span> <span class="n">i</span> <span class="o">-</span> <span class="n">i</span><span class="o">%</span><span class="mi">4</span> <span class="o">+</span> <span class="mi">4</span> <span class="c1"># end of the header section</span>
+        
+        <span class="c1"># parse header</span>
+        <span class="n">hlines</span> <span class="o">=</span> <span class="n">bindata</span><span class="p">[:</span><span class="n">header_end</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\0</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">hlines</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="n">elements</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">elements</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">elements</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;XRes&quot;</span><span class="p">,</span> <span class="s2">&quot;YRes&quot;</span><span class="p">):</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                
+            <span class="n">h</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        
+        <span class="n">xres</span> <span class="o">=</span> <span class="n">h</span><span class="p">[</span><span class="s2">&quot;XRes&quot;</span><span class="p">]</span>
+        <span class="n">yres</span> <span class="o">=</span> <span class="n">h</span><span class="p">[</span><span class="s2">&quot;YRes&quot;</span><span class="p">]</span>
+        
+        <span class="c1"># d = bindata[header_end:header_end+xres*yres*4]</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">bindata</span><span class="p">[</span><span class="n">header_end</span><span class="p">:]</span>
+        <span class="n">flattened</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;&lt;f4&quot;</span><span class="p">)</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">flattened</span><span class="p">,</span> <span class="p">(</span><span class="n">yres</span><span class="p">,</span> <span class="n">xres</span><span class="p">))</span>
+        
+        <span class="c1"># physical dimension of the image</span>
+        <span class="k">if</span> <span class="s2">&quot;XReal&quot;</span> <span class="ow">in</span> <span class="n">h</span> <span class="ow">and</span> <span class="s2">&quot;YReal&quot;</span> <span class="ow">in</span> <span class="n">h</span><span class="p">:</span>
+            <span class="n">xreal</span> <span class="o">=</span> <span class="n">h</span><span class="p">[</span><span class="s2">&quot;XReal&quot;</span><span class="p">]</span>
+            <span class="n">yreal</span> <span class="o">=</span> <span class="n">h</span><span class="p">[</span><span class="s2">&quot;YReal&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">xreal</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="n">yreal</span> <span class="o">=</span> <span class="mf">1.0</span>
+        
+        <span class="c1"># physical offset of the image</span>
+        <span class="k">if</span> <span class="s2">&quot;XOffset&quot;</span> <span class="ow">in</span> <span class="n">h</span> <span class="ow">and</span> <span class="s2">&quot;YOffset&quot;</span> <span class="ow">in</span> <span class="n">h</span><span class="p">:</span>
+            <span class="n">xoff</span> <span class="o">=</span> <span class="n">h</span><span class="p">[</span><span class="s2">&quot;XOffset&quot;</span><span class="p">]</span>
+            <span class="n">yoff</span> <span class="o">=</span> <span class="n">h</span><span class="p">[</span><span class="s2">&quot;YOffset&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">xoff</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">yoff</span> <span class="o">=</span> <span class="mf">0.0</span>
+        
+        <span class="c1"># calculating the coordinates</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">xoff</span><span class="p">,</span> <span class="n">xoff</span> <span class="o">+</span> <span class="n">xreal</span><span class="p">,</span> <span class="n">xres</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="c1"># this gives the edges of each pixel</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span><span class="o">/</span><span class="mf">2.0</span>               <span class="c1"># the position of each pixel is the middle of adjacent edges</span>
+                
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">yoff</span><span class="p">,</span> <span class="n">yoff</span> <span class="o">+</span> <span class="n">yreal</span><span class="p">,</span> <span class="n">yres</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="c1"># this gives the edges of each pixel</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">y</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span><span class="o">/</span><span class="mf">2.0</span>               <span class="c1"># the position of each pixel is the middle of adjacent edges</span>
+        
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="c1"># 1d array</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span> <span class="c1"># 1d array</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xmat</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="c1"># convert to 2d matrix</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zmat</span> <span class="o">=</span> <span class="n">mat</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">h</span><span class="p">)</span></div>
+    
+<div class="viewcode-block" id="GwyddionSimpleField.save"><a class="viewcode-back" href="../../snpl.afm.html#snpl.afm.GwyddionSimpleField.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fp</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Saves the image in GSF format. </span>
+
+<span class="sd">        The saved file can be opened by Gwyddion (hopefully)</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            fp (str or file-like): destination</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        
+        <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span><span class="n">MAGIC_LINE</span><span class="p">]</span>
+        
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">HFIELDS</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="n">string</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                    <span class="n">string</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Header values must be string, float, or int (key </span><span class="se">\&quot;</span><span class="si">{0}</span><span class="se">\&quot;</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+                <span class="n">headers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span> <span class="o">+</span> <span class="s2">&quot; = &quot;</span> <span class="o">+</span> <span class="n">string</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">pass</span>
+        
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">HFIELDS</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="n">string</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                    <span class="n">string</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Header values must be string, float, or int (key </span><span class="se">\&quot;</span><span class="si">{0}</span><span class="se">\&quot;</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+                <span class="n">headers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span> <span class="o">+</span> <span class="s2">&quot; = &quot;</span> <span class="o">+</span> <span class="n">string</span><span class="p">)</span>
+        
+        <span class="n">header</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">headers</span><span class="p">)</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>  <span class="c1"># convert to bytes</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="nb">bytes</span><span class="p">([</span><span class="n">ch</span> <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">header</span> <span class="k">if</span> <span class="n">ch</span> <span class="o">!=</span> <span class="mh">0x00</span><span class="p">])</span> <span class="c1"># No null character allowed in the header section</span>
+                
+        <span class="n">nullpad</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">header</span><span class="p">)</span> <span class="o">%</span> <span class="mi">4</span> <span class="c1"># the number of null bytes to fill the header part</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="n">header</span> <span class="o">+</span> <span class="nb">bytes</span><span class="p">([</span><span class="mh">0x00</span><span class="p">]</span><span class="o">*</span><span class="n">nullpad</span><span class="p">)</span> <span class="c1"># add necessary null bytes</span>
+        
+        <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zmat</span><span class="p">)</span>    
+        <span class="n">data</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">tobytes</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">header</span> <span class="o">+</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">header</span> <span class="o">+</span> <span class="n">data</span><span class="p">)</span></div></div>
+            
+
+<span class="n">VERSION_OFFSET</span>   <span class="o">=</span> <span class="mh">0x10</span>
+<span class="n">ENDFILE_OFFSET</span>   <span class="o">=</span> <span class="mh">0x14</span>
+<span class="n">DATASTART_OFFSET</span> <span class="o">=</span> <span class="mh">0x18</span>
+<span class="n">DATETIME_OFFSET</span>  <span class="o">=</span> <span class="mh">0x1c</span> <span class="c1"># added by SN</span>
+<span class="n">XRES_OFFSET</span>      <span class="o">=</span> <span class="mh">0x57a</span>
+<span class="n">YRES_OFFSET</span>      <span class="o">=</span> <span class="mh">0x57c</span>
+<span class="n">XSCALE_OFFSET</span>    <span class="o">=</span> <span class="mh">0x98</span>
+<span class="n">YSCALE_OFFSET</span>    <span class="o">=</span> <span class="mh">0xa0</span>
+<span class="n">ZSCALE_OFFSET</span>    <span class="o">=</span> <span class="mh">0xa8</span>
+<span class="n">ZOFFSET_OFFSET</span>   <span class="o">=</span> <span class="mh">0xe0</span>
+
+<span class="k">def</span> <span class="nf">_load_single_xq</span><span class="p">(</span><span class="n">bins</span><span class="p">,</span> <span class="n">ztype</span><span class="o">=</span><span class="s2">&quot;topography&quot;</span><span class="p">):</span>
+    
+    <span class="n">version</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">bins</span><span class="p">[</span><span class="n">VERSION_OFFSET</span><span class="p">:</span><span class="n">VERSION_OFFSET</span><span class="o">+</span><span class="mi">4</span><span class="p">],</span> <span class="s2">&quot;&lt;i4&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">endfile</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">bins</span><span class="p">[</span><span class="n">ENDFILE_OFFSET</span><span class="p">:</span><span class="n">ENDFILE_OFFSET</span><span class="o">+</span><span class="mi">4</span><span class="p">],</span> <span class="s2">&quot;&lt;i4&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">datastart</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">bins</span><span class="p">[</span><span class="n">DATASTART_OFFSET</span><span class="p">:</span><span class="n">DATASTART_OFFSET</span><span class="o">+</span><span class="mi">4</span><span class="p">],</span> <span class="s2">&quot;&lt;i4&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+    
+    <span class="n">xres</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">bins</span><span class="p">[</span><span class="n">XRES_OFFSET</span><span class="p">:</span><span class="n">XRES_OFFSET</span><span class="o">+</span><span class="mi">2</span><span class="p">],</span> <span class="s2">&quot;&lt;i2&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">yres</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">bins</span><span class="p">[</span><span class="n">YRES_OFFSET</span><span class="p">:</span><span class="n">YRES_OFFSET</span><span class="o">+</span><span class="mi">2</span><span class="p">],</span> <span class="s2">&quot;&lt;i2&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+    
+    <span class="n">xscale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">bins</span><span class="p">[</span><span class="n">XSCALE_OFFSET</span><span class="p">:</span><span class="n">XSCALE_OFFSET</span><span class="o">+</span><span class="mi">8</span><span class="p">],</span> <span class="s2">&quot;&lt;f8&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">xscale</span> <span class="o">=</span> <span class="n">xscale</span><span class="o">*</span><span class="mf">1e-9</span> <span class="c1"># nm -&gt; m</span>
+    
+    <span class="n">yscale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">bins</span><span class="p">[</span><span class="n">YSCALE_OFFSET</span><span class="p">:</span><span class="n">YSCALE_OFFSET</span><span class="o">+</span><span class="mi">8</span><span class="p">],</span> <span class="s2">&quot;&lt;f8&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">yscale</span> <span class="o">=</span> <span class="n">yscale</span><span class="o">*</span><span class="mf">1e-9</span> <span class="c1"># nm -&gt; m</span>
+    
+    <span class="n">zscale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">bins</span><span class="p">[</span><span class="n">ZSCALE_OFFSET</span><span class="p">:</span><span class="n">ZSCALE_OFFSET</span><span class="o">+</span><span class="mi">8</span><span class="p">],</span> <span class="s2">&quot;&lt;f8&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">ztype</span> <span class="o">==</span> <span class="s2">&quot;topography&quot;</span><span class="p">:</span>
+        <span class="n">zscale</span> <span class="o">=</span> <span class="n">zscale</span><span class="o">*</span><span class="mf">1e-9</span> <span class="c1"># nm -&gt; m</span>
+    <span class="k">elif</span> <span class="n">ztype</span> <span class="o">==</span> <span class="s2">&quot;phase&quot;</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">pass</span>
+    
+    <span class="n">zoffset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">bins</span><span class="p">[</span><span class="n">ZOFFSET_OFFSET</span><span class="p">:</span><span class="n">ZOFFSET_OFFSET</span><span class="o">+</span><span class="mi">8</span><span class="p">],</span> <span class="s2">&quot;&lt;f8&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># ?</span>
+    
+    <span class="n">ymdhms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">bins</span><span class="p">[</span><span class="n">DATETIME_OFFSET</span><span class="p">:</span><span class="n">DATETIME_OFFSET</span><span class="o">+</span><span class="mi">12</span><span class="p">],</span> <span class="s2">&quot;&lt;u2&quot;</span><span class="p">)</span>
+    <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="o">*</span><span class="n">ymdhms</span><span class="p">)</span><span class="o">.</span><span class="n">timestamp</span><span class="p">()</span>
+    
+    <span class="c1"># for i, v in enumerate(np.frombuffer(bins[:datastart], &quot;&lt;u2&quot;)):</span>
+    <span class="c1">#     print(i, v)</span>
+    
+    <span class="c1"># print(version, endfile, datastart, xres, yres, xscale, yscale, zscale, zoffset)</span>
+    
+    <span class="n">dataend</span> <span class="o">=</span> <span class="n">datastart</span> <span class="o">+</span> <span class="n">xres</span><span class="o">*</span><span class="n">yres</span><span class="o">*</span><span class="mi">2</span>
+    
+    <span class="n">zmat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">bins</span><span class="p">[</span><span class="n">datastart</span><span class="p">:</span><span class="n">dataend</span><span class="p">],</span> <span class="s2">&quot;&lt;u2&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+    <span class="n">zmat</span> <span class="o">=</span> <span class="p">(</span><span class="n">zmat</span> <span class="o">+</span> <span class="n">zoffset</span><span class="p">)</span><span class="o">*</span><span class="n">zscale</span> <span class="c1"># may be wrong</span>
+    <span class="n">zmat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">zmat</span><span class="p">,</span> <span class="p">(</span><span class="n">yres</span><span class="p">,</span> <span class="n">xres</span><span class="p">))</span>
+    
+    <span class="n">bins_residue</span> <span class="o">=</span> <span class="n">bins</span><span class="p">[</span><span class="n">dataend</span><span class="p">:]</span>
+    
+    <span class="n">xreal</span> <span class="o">=</span> <span class="n">xscale</span><span class="o">*</span><span class="p">(</span><span class="n">xres</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">yreal</span> <span class="o">=</span> <span class="n">yscale</span><span class="o">*</span><span class="p">(</span><span class="n">yres</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    
+    <span class="n">xu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">xreal</span><span class="p">,</span> <span class="n">xres</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">xu</span> <span class="o">=</span> <span class="p">(</span><span class="n">xu</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">xu</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span><span class="o">/</span><span class="mf">2.0</span>
+
+    <span class="n">yu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">yreal</span><span class="p">,</span> <span class="n">yres</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">yu</span> <span class="o">=</span> <span class="p">(</span><span class="n">yu</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">yu</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span><span class="o">/</span><span class="mf">2.0</span>
+    
+    <span class="n">xmat</span><span class="p">,</span> <span class="n">ymat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">xu</span><span class="p">,</span> <span class="n">yu</span><span class="p">)</span>
+    
+    <span class="c1"># pyplot.gca().set_aspect(&quot;equal&quot;)</span>
+    <span class="c1"># pyplot.pcolormesh(xmat, ymat, zmat)</span>
+    <span class="c1"># pyplot.show()</span>
+    
+    <span class="n">d</span> <span class="o">=</span> <span class="n">GwyddionSimpleField</span><span class="p">()</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;XRes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">xres</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;YRes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">yres</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;XReal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">xreal</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;YReal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">yreal</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;XYUnits&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;m&quot;</span>
+    <span class="k">if</span> <span class="n">ztype</span> <span class="o">==</span> <span class="s2">&quot;topography&quot;</span><span class="p">:</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;ZUnits&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;m&quot;</span>
+    <span class="k">elif</span> <span class="n">ztype</span> <span class="o">==</span> <span class="s2">&quot;phase&quot;</span><span class="p">:</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;ZUnits&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;deg&quot;</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;Timestamp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">timestamp</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">xu</span><span class="p">)</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">yu</span><span class="p">)</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">xmat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">xmat</span><span class="p">)</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">ymat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">ymat</span><span class="p">)</span>
+    <span class="n">d</span><span class="o">.</span><span class="n">zmat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">zmat</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">d</span><span class="p">,</span> <span class="n">bins_residue</span>
+
+<div class="viewcode-block" id="load_xq"><a class="viewcode-back" href="../../snpl.afm.html#snpl.afm.load_xq">[docs]</a><span class="k">def</span> <span class="nf">load_xq</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">ztype</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Loads a .xqdx or .xqpx files from Hitachi AFM. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        fp: file path or file-like object. The object must be in the binary read mode. </span>
+<span class="sd">        ztype: type of the z axis. if &quot;auto&quot;, it is inferred from the extension. </span>
+<span class="sd">            ``.xqdx`` = height, ``.xqpx`` = phase. Or it can be either of &quot;topography&quot;</span>
+<span class="sd">            or &quot;phase&quot;. </span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        a ``GwyddionSimpleField`` object. </span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; d = afm.load_xq(&quot;test_afm_raw_data_file.xqdx&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; pyplot.pcolormesh(d.xmat, d.ymat, d.zmat, shading=&quot;nearest&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; pyplot.show()</span>
+<span class="sd">        &gt;&gt;&gt; d.save(&quot;test_afm_saved_data.gjf&quot;) # save it as a Gwyddion Simple Field format</span>
+<span class="sd">        </span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">bins</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">bins</span> <span class="o">=</span> <span class="n">fp</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="n">ztype</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+        <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">fp</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">ext</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;.xqdx&quot;</span><span class="p">,</span> <span class="p">):</span>
+            <span class="n">zt</span> <span class="o">=</span> <span class="s2">&quot;topography&quot;</span>
+        <span class="k">elif</span> <span class="n">ext</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;.xqpx&quot;</span><span class="p">,</span> <span class="p">):</span>
+            <span class="n">zt</span> <span class="o">=</span> <span class="s2">&quot;phase&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">zt</span> <span class="o">=</span> <span class="n">ztype</span>
+    
+    <span class="n">d</span><span class="p">,</span> <span class="n">bins</span> <span class="o">=</span> <span class="n">_load_single_xq</span><span class="p">(</span><span class="n">bins</span><span class="p">,</span> <span class="n">zt</span><span class="p">)</span>
+    <span class="c1"># d.write(fp + &quot;.gsf&quot;)</span>
+    <span class="k">return</span> <span class="n">d</span></div>
+
+
+<div class="viewcode-block" id="row_background_polynomial"><a class="viewcode-back" href="../../snpl.afm.html#snpl.afm.row_background_polynomial">[docs]</a><span class="k">def</span> <span class="nf">row_background_polynomial</span><span class="p">(</span><span class="n">xmat</span><span class="p">,</span> <span class="n">zmat</span><span class="p">,</span> <span class="n">polydeg</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Calculates polynomial background for each scan row. </span>
+
+<span class="sd">    Performs polynomial fitting to each row in ``zmat``. </span>
+<span class="sd">    This is one of the basic method to correct for the mismatch between scan lines</span>
+<span class="sd">    and the curving of each scan line. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        xmat (numpy.ndarray): 2-d array of x coordinates. </span>
+<span class="sd">        zmat (numpy.ndarray): 2-d array of z coordinates (e.g., height)</span>
+<span class="sd">        polydeg (int): Degree of polynomial used in the fitting. </span>
+<span class="sd">            Must be a non-negative integer. Defaults to 1. </span>
+<span class="sd">        mask (numpy.ndarray or None): A 2-d truth array </span>
+<span class="sd">            specifying which points to use in the fitting. </span>
+<span class="sd">            If `None`, all points will be used. Defaults to `None`. </span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A 2-d ``numpy.ndarray`` with the same size as ``zmat``. </span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; d = afm.load_xq(&quot;test_data.xqdx&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; xmat = d.xmat*1e6</span>
+<span class="sd">        &gt;&gt;&gt; ymat = d.ymat*1e6</span>
+<span class="sd">        &gt;&gt;&gt; zmat = d.zmat*1e6</span>
+<span class="sd">        &gt;&gt;&gt; </span>
+<span class="sd">        &gt;&gt;&gt; mask = np.logical_or(xmat &lt; 2.5, 16.0 &lt; xmat) # mask a part of the image</span>
+<span class="sd">        &gt;&gt;&gt; zbmat = afm.row_background_polynomial(xmat, zmat, polydeg=1, mask=mask)</span>
+<span class="sd">        &gt;&gt;&gt; </span>
+<span class="sd">        &gt;&gt;&gt; pyplot.gca().set_aspect(&quot;equal&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; pyplot.pcolormesh(xmat, ymat, zmat - zbmat)</span>
+<span class="sd">        &gt;&gt;&gt; pyplot.colorbar()</span>
+<span class="sd">        &gt;&gt;&gt; pyplot.show()</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="n">zbmat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">zmat</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="c1"># check dimension</span>
+        <span class="k">if</span> <span class="n">zmat</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ma</span> <span class="o">=</span> <span class="n">mask</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">zmat</span><span class="p">))</span> <span class="c1"># mask only nans</span>
+            
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">zmat</span><span class="p">)):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">ma</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">xmat</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">zmat</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        
+        <span class="c1"># polynominal fitting for masked line data</span>
+        <span class="n">xm</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">m</span><span class="p">]</span>
+        <span class="n">zm</span> <span class="o">=</span> <span class="n">z</span><span class="p">[</span><span class="n">m</span><span class="p">]</span>
+        <span class="n">poly</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">poly1d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">xm</span><span class="p">,</span> <span class="n">zm</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="n">polydeg</span><span class="p">))</span>
+        
+        <span class="c1"># evaluating polynominal at all points (no matter if it is masked or not)</span>
+        <span class="n">zp</span> <span class="o">=</span> <span class="n">poly</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        
+        <span class="n">zbmat</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">zp</span>
+
+    <span class="k">return</span> <span class="n">zbmat</span> </div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">snpl 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../snpl.html" >snpl</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">snpl.afm</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Shintaro Nakagawa.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.0.0.
+    </div>
+  </body>
+</html>

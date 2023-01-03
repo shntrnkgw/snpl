@@ -1,0 +1,200 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snpl.image &#8212; snpl 0.3.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinxdoc.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">snpl 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../snpl.html" accesskey="U">snpl</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">snpl.image</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for snpl.image</h1><div class="highlight"><pre>
+<span></span><span class="c1"># coding=utf-8</span>
+<span class="sd">&quot;&quot;&quot;I/O interface for a generic multilayer array collection</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">snpl</span> <span class="kn">import</span> <span class="n">__version__</span>    
+
+<div class="viewcode-block" id="NpzImage"><a class="viewcode-back" href="../../snpl.image.html#snpl.image.NpzImage">[docs]</a><span class="k">class</span> <span class="nc">NpzImage</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;I/O interface for NpzImage file. </span>
+<span class="sd">    </span>
+<span class="sd">    NpzImage is a convenient file format to store </span>
+<span class="sd">    multi-layered multi-dimensional arrays with a metadata header. </span>
+<span class="sd">    Multiple ``numpy.ndarray`` objects with the same shape can be stored </span>
+<span class="sd">    as &quot;layers&quot;, which can be specified by a &quot;key&quot;. </span>
+<span class="sd">    All layers should have identical dimension and shape, but data type may be varied. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        fp (str or file-like): Path or file-like object of the source file. If None, an empty object is created. </span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        Creation</span>
+
+<span class="sd">        &gt;&gt;&gt; im = snpl.image.NpzImage()</span>
+<span class="sd">        </span>
+<span class="sd">        Adding headers</span>
+<span class="sd">        </span>
+<span class="sd">        &gt;&gt;&gt; im.h[&quot;number&quot;] = 100.0</span>
+<span class="sd">        &gt;&gt;&gt; im.h[&quot;string&quot;] = &quot;wow&quot;,</span>
+<span class="sd">        &gt;&gt;&gt; im.h[&quot;bool&quot;] = True</span>
+<span class="sd">        &gt;&gt;&gt; im.h[&quot;list&quot;] = [1.0, 2.0]</span>
+
+<span class="sd">        Adding layers</span>
+
+<span class="sd">        &gt;&gt;&gt; im.append_layer(&quot;one&quot;, np.array( [[1.0, 2.0], [3.0, 4.0]] ) )</span>
+<span class="sd">        &gt;&gt;&gt; im.append_layer(&quot;two&quot;, np.array( [[5.0, 6.0], [7.0, 8.0]] ) )</span>
+<span class="sd">        </span>
+<span class="sd">        Save to a file</span>
+
+<span class="sd">        &gt;&gt;&gt; im.save(&quot;npzimage.npz&quot;)</span>
+
+<span class="sd">        Load from a file</span>
+
+<span class="sd">        &gt;&gt;&gt; im2 = snpl.image.NpzImage(&quot;npzimage.npz&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; print(im2.h)</span>
+<span class="sd">        {&#39;number&#39;: 100.0, &#39;string&#39;: &#39;wow&#39;, &#39;bool&#39;: True, &#39;list&#39;: [1.0, 2.0], &#39;version&#39;: &#39;0.3.0&#39;}</span>
+<span class="sd">        &gt;&gt;&gt; print(im2.layers[&quot;one&quot;])</span>
+<span class="sd">        [[1. 2.]</span>
+<span class="sd">        [3. 4.]]</span>
+<span class="sd">        &gt;&gt;&gt; print(im2.layers[&quot;two&quot;])</span>
+<span class="sd">        [[5. 6.]</span>
+<span class="sd">        [7. 8.]]</span>
+<span class="sd">        &gt;&gt;&gt; print(im2.h[&quot;string&quot;])</span>
+<span class="sd">        wow</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fp</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializer</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">h</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">layers</span> <span class="o">=</span> <span class="p">{}</span>
+        
+        <span class="k">if</span> <span class="n">fp</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">allow_pickle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">z</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">arr</span> <span class="ow">in</span> <span class="n">z</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;h&quot;</span><span class="p">:</span>
+                        <span class="n">h</span> <span class="o">=</span> <span class="n">arr</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">layers</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">arr</span>
+            
+            <span class="n">h</span> <span class="o">=</span> <span class="n">h</span><span class="p">[()]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">layers</span> <span class="o">=</span> <span class="p">{}</span>
+                
+        <span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">h</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layers</span> <span class="o">=</span> <span class="n">layers</span>
+
+    <span class="c1">#-----#</span>
+    <span class="c1"># Get #</span>
+    <span class="c1">#-----#</span>
+<div class="viewcode-block" id="NpzImage.get_layer"><a class="viewcode-back" href="../../snpl.image.html#snpl.image.NpzImage.get_layer">[docs]</a>    <span class="k">def</span> <span class="nf">get_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">key</span><span class="p">]</span></div>
+    
+    <span class="c1">#---------#</span>
+    <span class="c1"># Editing #</span>
+    <span class="c1">#---------#</span>
+<div class="viewcode-block" id="NpzImage.append_layer"><a class="viewcode-back" href="../../snpl.image.html#snpl.image.NpzImage.append_layer">[docs]</a>    <span class="k">def</span> <span class="nf">append_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">arr</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span> <span class="c1"># check dimensionality</span>
+                    <span class="k">for</span> <span class="n">size1</span><span class="p">,</span> <span class="n">size2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">size1</span> <span class="o">!=</span> <span class="n">size2</span><span class="p">:</span>         <span class="c1"># check size in each dimension</span>
+                            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot append data with different shape. &quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot append data with different dimension. &quot;</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">arr</span></div>
+    
+<div class="viewcode-block" id="NpzImage.pop_layer"><a class="viewcode-back" href="../../snpl.image.html#snpl.image.NpzImage.pop_layer">[docs]</a>    <span class="k">def</span> <span class="nf">pop_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">)</span></div>
+    
+<div class="viewcode-block" id="NpzImage.save"><a class="viewcode-back" href="../../snpl.image.html#snpl.image.NpzImage.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">compress</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="n">h</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">__version__</span>
+        <span class="k">if</span> <span class="n">compress</span><span class="p">:</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">savez_compressed</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="n">h</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">savez</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="n">h</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="NpzImage.append_history"><a class="viewcode-back" href="../../snpl.image.html#snpl.image.NpzImage.append_history">[docs]</a>    <span class="k">def</span> <span class="nf">append_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;history&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;history&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">string</span><span class="p">,</span> <span class="p">]</span></div></div>
+                
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">snpl 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../snpl.html" >snpl</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">snpl.image</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Shintaro Nakagawa.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.0.0.
+    </div>
+  </body>
+</html>

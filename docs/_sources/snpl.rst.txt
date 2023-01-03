@@ -1,0 +1,26 @@
+snpl package
+============
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   snpl.afm
+   snpl.bod
+   snpl.fit
+   snpl.gpc
+   snpl.image
+   snpl.rheo
+   snpl.tensile
+   snpl.util
+   snpl.uvvis
+
+Module contents
+---------------
+
+.. automodule:: snpl
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,329 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>snpl.afm module &#8212; snpl 0.3.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinxdoc.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="snpl.bod module" href="snpl.bod.html" />
+    <link rel="prev" title="snpl package" href="snpl.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="snpl.bod.html" title="snpl.bod module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="snpl.html" title="snpl package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">snpl 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="snpl.html" accesskey="U">snpl package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">snpl.afm module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-snpl.afm">
+<span id="snpl-afm-module"></span><h1>snpl.afm module<a class="headerlink" href="#module-snpl.afm" title="Permalink to this heading">¶</a></h1>
+<p>I/O interface utilities for AFM (atomic force microscope) images.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="snpl.afm.GwyddionSimpleField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snpl.afm.</span></span><span class="sig-name descname"><span class="pre">GwyddionSimpleField</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/afm.html#GwyddionSimpleField"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.afm.GwyddionSimpleField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Read/write interface for Gwyddion Simple Field format.</p>
+<p>See <a class="reference external" href="http://gwyddion.net/documentation/user-guide-en/gsf.html">http://gwyddion.net/documentation/user-guide-en/gsf.html</a> for specifications.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fp</strong> – Source file (path or file-like object).
+If None, create an empty object.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snpl.afm.GwyddionSimpleField.h">
+<span class="sig-name descname"><span class="pre">h</span></span><a class="headerlink" href="#snpl.afm.GwyddionSimpleField.h" title="Permalink to this definition">¶</a></dt>
+<dd><p>header.</p>
+<ul class="simple">
+<li><p>“XRes”: pixel number along the x axis.</p></li>
+<li><p>“YRes”: pixel number along the y axis.</p></li>
+<li><p>“XReal”: real length of the image along the x axis (in meter).</p></li>
+<li><p>“YReal”: real length of the image along the y axis (in meter).</p></li>
+<li><p>“XOffset”: offset to the x coordinates.</p></li>
+<li><p>“YOffset”: offset to the y coordinates.</p></li>
+<li><p>“Title”: title string.</p></li>
+<li><p>“XYUnits”: string describing the unit. (usually m (meter)).</p></li>
+<li><p>“ZUnits”: string describing the unit. (usually m (meter)).</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snpl.afm.GwyddionSimpleField.x">
+<span class="sig-name descname"><span class="pre">x</span></span><a class="headerlink" href="#snpl.afm.GwyddionSimpleField.x" title="Permalink to this definition">¶</a></dt>
+<dd><p>1-d array of the x-coordinates along x axis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snpl.afm.GwyddionSimpleField.y">
+<span class="sig-name descname"><span class="pre">y</span></span><a class="headerlink" href="#snpl.afm.GwyddionSimpleField.y" title="Permalink to this definition">¶</a></dt>
+<dd><p>1-d array of the y-coordinates along y axis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snpl.afm.GwyddionSimpleField.zmat">
+<span class="sig-name descname"><span class="pre">zmat</span></span><a class="headerlink" href="#snpl.afm.GwyddionSimpleField.zmat" title="Permalink to this definition">¶</a></dt>
+<dd><p>2-d array of the z data (height, phase angle, etc)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snpl.afm.GwyddionSimpleField.xmat">
+<span class="sig-name descname"><span class="pre">xmat</span></span><a class="headerlink" href="#snpl.afm.GwyddionSimpleField.xmat" title="Permalink to this definition">¶</a></dt>
+<dd><p>2-d array of the x coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snpl.afm.GwyddionSimpleField.ymat">
+<span class="sig-name descname"><span class="pre">ymat</span></span><a class="headerlink" href="#snpl.afm.GwyddionSimpleField.ymat" title="Permalink to this definition">¶</a></dt>
+<dd><p>2-d array of the y coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="snpl.afm.GwyddionSimpleField.path">
+<span class="sig-name descname"><span class="pre">path</span></span><a class="headerlink" href="#snpl.afm.GwyddionSimpleField.path" title="Permalink to this definition">¶</a></dt>
+<dd><p>path to the source file, if any.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">afm</span><span class="o">.</span><span class="n">GwyddionSimpleField</span><span class="p">(</span><span class="s2">&quot;test.gsf&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pyplot</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">xmat</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">ymat</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">zmat</span><span class="p">,</span> <span class="n">shading</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pyplot</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;save_test.gsf&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.afm.GwyddionSimpleField.load_from_binary">
+<span class="sig-name descname"><span class="pre">load_from_binary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bindata</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/afm.html#GwyddionSimpleField.load_from_binary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.afm.GwyddionSimpleField.load_from_binary" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.afm.GwyddionSimpleField.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/afm.html#GwyddionSimpleField.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.afm.GwyddionSimpleField.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the image in GSF format.</p>
+<p>The saved file can be opened by Gwyddion (hopefully)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fp</strong> (<em>str</em><em> or </em><em>file-like</em>) – destination</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snpl.afm.load_xq">
+<span class="sig-prename descclassname"><span class="pre">snpl.afm.</span></span><span class="sig-name descname"><span class="pre">load_xq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ztype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/afm.html#load_xq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.afm.load_xq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads a .xqdx or .xqpx files from Hitachi AFM.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fp</strong> – file path or file-like object. The object must be in the binary read mode.</p></li>
+<li><p><strong>ztype</strong> – type of the z axis. if “auto”, it is inferred from the extension.
+<code class="docutils literal notranslate"><span class="pre">.xqdx</span></code> = height, <code class="docutils literal notranslate"><span class="pre">.xqpx</span></code> = phase. Or it can be either of “topography”
+or “phase”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a <code class="docutils literal notranslate"><span class="pre">GwyddionSimpleField</span></code> object.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">afm</span><span class="o">.</span><span class="n">load_xq</span><span class="p">(</span><span class="s2">&quot;test_afm_raw_data_file.xqdx&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pyplot</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">xmat</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">ymat</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">zmat</span><span class="p">,</span> <span class="n">shading</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pyplot</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;test_afm_saved_data.gjf&quot;</span><span class="p">)</span> <span class="c1"># save it as a Gwyddion Simple Field format</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snpl.afm.row_background_polynomial">
+<span class="sig-prename descclassname"><span class="pre">snpl.afm.</span></span><span class="sig-name descname"><span class="pre">row_background_polynomial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xmat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zmat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">polydeg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/afm.html#row_background_polynomial"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.afm.row_background_polynomial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates polynomial background for each scan row.</p>
+<p>Performs polynomial fitting to each row in <code class="docutils literal notranslate"><span class="pre">zmat</span></code>.
+This is one of the basic method to correct for the mismatch between scan lines
+and the curving of each scan line.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>xmat</strong> (<em>numpy.ndarray</em>) – 2-d array of x coordinates.</p></li>
+<li><p><strong>zmat</strong> (<em>numpy.ndarray</em>) – 2-d array of z coordinates (e.g., height)</p></li>
+<li><p><strong>polydeg</strong> (<em>int</em>) – Degree of polynomial used in the fitting.
+Must be a non-negative integer. Defaults to 1.</p></li>
+<li><p><strong>mask</strong> (<em>numpy.ndarray</em><em> or </em><em>None</em>) – A 2-d truth array
+specifying which points to use in the fitting.
+If <cite>None</cite>, all points will be used. Defaults to <cite>None</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A 2-d <code class="docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> with the same size as <code class="docutils literal notranslate"><span class="pre">zmat</span></code>.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">afm</span><span class="o">.</span><span class="n">load_xq</span><span class="p">(</span><span class="s2">&quot;test_data.xqdx&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">xmat</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">xmat</span><span class="o">*</span><span class="mf">1e6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ymat</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">ymat</span><span class="o">*</span><span class="mf">1e6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">zmat</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">zmat</span><span class="o">*</span><span class="mf">1e6</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">xmat</span> <span class="o">&lt;</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">16.0</span> <span class="o">&lt;</span> <span class="n">xmat</span><span class="p">)</span> <span class="c1"># mask a part of the image</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">zbmat</span> <span class="o">=</span> <span class="n">afm</span><span class="o">.</span><span class="n">row_background_polynomial</span><span class="p">(</span><span class="n">xmat</span><span class="p">,</span> <span class="n">zmat</span><span class="p">,</span> <span class="n">polydeg</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pyplot</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s2">&quot;equal&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pyplot</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span><span class="n">xmat</span><span class="p">,</span> <span class="n">ymat</span><span class="p">,</span> <span class="n">zmat</span> <span class="o">-</span> <span class="n">zbmat</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pyplot</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pyplot</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">snpl.afm module</a><ul>
+<li><a class="reference internal" href="#snpl.afm.GwyddionSimpleField"><code class="docutils literal notranslate"><span class="pre">GwyddionSimpleField</span></code></a><ul>
+<li><a class="reference internal" href="#snpl.afm.GwyddionSimpleField.h"><code class="docutils literal notranslate"><span class="pre">GwyddionSimpleField.h</span></code></a></li>
+<li><a class="reference internal" href="#snpl.afm.GwyddionSimpleField.x"><code class="docutils literal notranslate"><span class="pre">GwyddionSimpleField.x</span></code></a></li>
+<li><a class="reference internal" href="#snpl.afm.GwyddionSimpleField.y"><code class="docutils literal notranslate"><span class="pre">GwyddionSimpleField.y</span></code></a></li>
+<li><a class="reference internal" href="#snpl.afm.GwyddionSimpleField.zmat"><code class="docutils literal notranslate"><span class="pre">GwyddionSimpleField.zmat</span></code></a></li>
+<li><a class="reference internal" href="#snpl.afm.GwyddionSimpleField.xmat"><code class="docutils literal notranslate"><span class="pre">GwyddionSimpleField.xmat</span></code></a></li>
+<li><a class="reference internal" href="#snpl.afm.GwyddionSimpleField.ymat"><code class="docutils literal notranslate"><span class="pre">GwyddionSimpleField.ymat</span></code></a></li>
+<li><a class="reference internal" href="#snpl.afm.GwyddionSimpleField.path"><code class="docutils literal notranslate"><span class="pre">GwyddionSimpleField.path</span></code></a></li>
+<li><a class="reference internal" href="#snpl.afm.GwyddionSimpleField.load_from_binary"><code class="docutils literal notranslate"><span class="pre">GwyddionSimpleField.load_from_binary()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.afm.GwyddionSimpleField.save"><code class="docutils literal notranslate"><span class="pre">GwyddionSimpleField.save()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#snpl.afm.load_xq"><code class="docutils literal notranslate"><span class="pre">load_xq()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.afm.row_background_polynomial"><code class="docutils literal notranslate"><span class="pre">row_background_polynomial()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="snpl.html"
+                          title="previous chapter">snpl package</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="snpl.bod.html"
+                          title="next chapter">snpl.bod module</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/snpl.afm.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="snpl.bod.html" title="snpl.bod module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="snpl.html" title="snpl package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">snpl 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="snpl.html" >snpl package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">snpl.afm module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Shintaro Nakagawa.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.0.0.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,7 @@
+snpl.rheo module
+================
+
+.. automodule:: snpl.rheo
+   :members:
+   :undoc-members:
+   :show-inheritance:

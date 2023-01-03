@@ -1,0 +1,7 @@
+snpl.gpc module
+===============
+
+.. automodule:: snpl.gpc
+   :members:
+   :undoc-members:
+   :show-inheritance:

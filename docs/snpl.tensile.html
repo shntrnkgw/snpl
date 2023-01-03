@@ -1,0 +1,193 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>snpl.tensile module &#8212; snpl 0.3.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinxdoc.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="snpl.util module" href="snpl.util.html" />
+    <link rel="prev" title="snpl.rheo module" href="snpl.rheo.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="snpl.util.html" title="snpl.util module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="snpl.rheo.html" title="snpl.rheo module"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">snpl 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="snpl.html" accesskey="U">snpl package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">snpl.tensile module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-snpl.tensile">
+<span id="snpl-tensile-module"></span><h1>snpl.tensile module<a class="headerlink" href="#module-snpl.tensile" title="Permalink to this heading">¶</a></h1>
+<p>I/O interfaces for tensile test data</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="snpl.tensile.load_TrapeziumCSV">
+<span class="sig-prename descclassname"><span class="pre">snpl.tensile.</span></span><span class="sig-name descname"><span class="pre">load_TrapeziumCSV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'shift-jis'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dialect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'excel'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/tensile.html#load_TrapeziumCSV"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.tensile.load_TrapeziumCSV" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads a CSV file exported by Trapezium software.</p>
+<p>Works both for Trapezium 3 (for AGS-X) and Trapezium 2 (for EZ-L).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fp</strong> (<em>str</em><em> or </em><em>file-like</em>) – Path or file-like object of the source CSV file.</p></li>
+<li><p><strong>encoding</strong> (<em>str</em>) – Encoding of the source file. Defaults to shift-jis.</p></li>
+<li><p><strong>dialect</strong> (<em>str</em>) – Dialect of the CSV to be read. Defaults to <code class="docutils literal notranslate"><span class="pre">excel</span></code> (comma-delimited).
+Setting to <code class="docutils literal notranslate"><span class="pre">excel-tab</span></code> enables loading a tab-delimited values (TSV).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of <code class="docutils literal notranslate"><span class="pre">hicsv.hicsv</span></code> objects for each test pieces (batches).</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This function is compatible with the data collected with “Single” and “Control” programs
+in the Trapezium software, but not with “Cycle” program.
+For the data collected with “Cycle” program, use <code class="docutils literal notranslate"><span class="pre">load_TrapeziumCycleCSV</span></code>.</p>
+</div>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">tensile</span><span class="o">.</span><span class="n">load_TrapeziumCSV</span><span class="p">(</span><span class="s2">&quot;trapezium_csv.csv&quot;</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">d</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;piece &quot;</span> <span class="o">+</span> <span class="n">c</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;名前&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.txt&quot;</span><span class="p">)</span> <span class="c1"># save each batch using the batch name as the file name</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snpl.tensile.load_TrapeziumCycleCSV">
+<span class="sig-prename descclassname"><span class="pre">snpl.tensile.</span></span><span class="sig-name descname"><span class="pre">load_TrapeziumCycleCSV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'shift-jis'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_cycle_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dialect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'excel'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/tensile.html#load_TrapeziumCycleCSV"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.tensile.load_TrapeziumCycleCSV" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads a cycle CSV file exported by Trapezium software.</p>
+<p>To discriminate between the cycles, each cycle will be given a unique and consequtive
+“Cycle ID”, usually starting from zero.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fp</strong> (<em>str</em><em> or </em><em>file-like</em>) – Path or file-like object of the source CSV file.</p></li>
+<li><p><strong>encoding</strong> (<em>str</em>) – Encoding of the source file. Defaults to shift-jis.</p></li>
+<li><p><strong>initial_cycle_id</strong> (<em>int</em>) – Index of the first cycle.
+This integer number will be used as the “Cycle ID” of the first cycle.</p></li>
+<li><p><strong>dialect</strong> (<em>str</em>) – Dialect of the CSV to be read. Defaults to <code class="docutils literal notranslate"><span class="pre">excel</span></code> (comma-delimited).
+Setting to <code class="docutils literal notranslate"><span class="pre">excel-tab</span></code> enables loading a tab-delimited values (TSV).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of <code class="docutils literal notranslate"><span class="pre">hicsv.hicsv</span></code> objects for each cycle.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This function is not compatible with the data collected with “Single” and “Control” programs
+in the Trapezium software. For these cases, use <code class="docutils literal notranslate"><span class="pre">load_TrapeziumCSV</span></code>.</p>
+</div>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">tensile</span><span class="o">.</span><span class="n">load_TrapeziumCSV</span><span class="p">(</span><span class="s2">&quot;trapezium_cycle.csv&quot;</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">d</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;piece &quot;</span> <span class="o">+</span> <span class="n">c</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;Cycle ID&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.txt&quot;</span><span class="p">)</span> <span class="c1"># save each cycle using the cycle id as the file name</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">snpl.tensile module</a><ul>
+<li><a class="reference internal" href="#snpl.tensile.load_TrapeziumCSV"><code class="docutils literal notranslate"><span class="pre">load_TrapeziumCSV()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.tensile.load_TrapeziumCycleCSV"><code class="docutils literal notranslate"><span class="pre">load_TrapeziumCycleCSV()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="snpl.rheo.html"
+                          title="previous chapter">snpl.rheo module</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="snpl.util.html"
+                          title="next chapter">snpl.util module</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/snpl.tensile.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="snpl.util.html" title="snpl.util module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="snpl.rheo.html" title="snpl.rheo module"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">snpl 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="snpl.html" >snpl package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">snpl.tensile module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Shintaro Nakagawa.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.0.0.
+    </div>
+  </body>
+</html>

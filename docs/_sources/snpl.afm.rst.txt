@@ -1,0 +1,7 @@
+snpl.afm module
+===============
+
+.. automodule:: snpl.afm
+   :members:
+   :undoc-members:
+   :show-inheritance:

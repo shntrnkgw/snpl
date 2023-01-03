@@ -1,0 +1,48 @@
+.. snpl documentation master file, created by
+   sphinx-quickstart on Tue Aug 23 23:51:56 2022.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+snpl package documentation
+==========================
+
+What is it?
+-----------
+
+``snpl`` is a pure-Python package for in-house use in Yoshie lab
+at the Institute of Industrial Science, the University of Tokyo. 
+
+It serves mainly for three purposes. 
+First, it provides a thin wrapper to ``matplotlib.pyplot`` 
+with some utilities that make daily plotting tasks much easier. 
+This is mainly handled in the main ``snpl`` module. 
+Some additional utilities are available in ``snpl.util`` module. 
+Second, it provides parsers for data formats used in the lab. 
+It uses the hicsv_ object as a unified data interface. 
+
+.. _hicsv: https://github.com/shntrnkgw/hicsv
+
+API Reference
+-------------
+
+.. toctree::
+   :maxdepth: 1
+
+   snpl
+   snpl.afm
+   snpl.bod
+   snpl.fit
+   snpl.gpc
+   snpl.image
+   snpl.rheo
+   snpl.tensile
+   snpl.util
+   snpl.uvvis
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

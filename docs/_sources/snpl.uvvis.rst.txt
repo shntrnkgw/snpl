@@ -1,0 +1,7 @@
+snpl.uvvis module
+=================
+
+.. automodule:: snpl.uvvis
+   :members:
+   :undoc-members:
+   :show-inheritance:

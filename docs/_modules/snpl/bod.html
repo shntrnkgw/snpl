@@ -1,0 +1,196 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snpl.bod &#8212; snpl 0.3.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinxdoc.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">snpl 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../snpl.html" accesskey="U">snpl</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">snpl.bod</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for snpl.bod</h1><div class="highlight"><pre>
+<span></span><span class="c1"># coding=&quot;utf-8&quot;</span>
+
+<span class="kn">import</span> <span class="nn">hicsv</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<div class="viewcode-block" id="load_OxiTopCSV"><a class="viewcode-back" href="../../snpl.bod.html#snpl.bod.load_OxiTopCSV">[docs]</a><span class="k">def</span> <span class="nf">load_OxiTopCSV</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;;&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Loads a CSV file from OxiTop into a handy ``hicsv`` object. </span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        fp: path to the file or file-like object. </span>
+<span class="sd">        sep: delimiter. Defaults to semicolon. </span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        a ``hicsv.hicsv`` object. </span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; d = load_OxiTopCSV(&quot;oxitop_raw_data.CSV&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; print(d.keys)</span>
+<span class="sd">        [&#39;No.&#39;, &#39;Time [sec]&#39;, &#39;hPa&#39;]</span>
+<span class="sd">        &gt;&gt;&gt; t, deltaP = d.ga(&quot;Time [sec]&quot;, &quot;hPa&quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">fp</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+
+    <span class="c1"># get header lines</span>
+
+    <span class="n">i_headerend</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="n">i_headerend</span> <span class="o">=</span> <span class="n">i</span>
+            <span class="k">break</span>
+    
+    <span class="k">if</span> <span class="n">i_headerend</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;cannot find the end point of the header part&quot;</span><span class="p">)</span>
+
+    <span class="n">lines_h</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[:</span><span class="n">i_headerend</span><span class="p">]</span>
+    <span class="n">lines_t</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="n">i_headerend</span><span class="p">:]</span>
+
+    <span class="c1">################</span>
+    <span class="c1"># parse header #</span>
+    <span class="c1">################</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">cells_h</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lines_h</span><span class="p">:</span>
+        <span class="c1"># split by `sep` and join into one big list</span>
+        <span class="n">cells_h</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">sep</span><span class="p">))</span>
+
+    <span class="n">pairs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">pair</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">is_previous_blank</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">cells_h</span><span class="p">:</span>
+        <span class="c1"># case 1: current is blank &amp; previous is blank     =&gt; do nothing</span>
+        <span class="c1"># case 2: current is blank &amp; previous is not blank =&gt; end of the previous `pair`. add the `pair` to `pairs` and erase `pair`</span>
+        <span class="c1"># case 3: current is not blank &amp; previous is blank =&gt; beginning of a new `pair`</span>
+        <span class="c1"># case 4: current is not blank &amp; previous is not blank =&gt; add to the current `pair`</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">cell</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">is_previous_blank</span><span class="p">:</span>
+                <span class="n">is_previous_blank</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">pairs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pair</span><span class="p">)</span>
+                <span class="n">pair</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">is_previous_blank</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">continue</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pair</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
+            <span class="n">is_previous_blank</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">continue</span>
+    
+    <span class="n">h</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">count_nokey</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="n">pairs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pair</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">h</span><span class="p">[</span><span class="s2">&quot;Keyless value </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">count_nokey</span><span class="p">)]</span> <span class="o">=</span> <span class="n">pair</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">count_nokey</span> <span class="o">=</span> <span class="n">count_nokey</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">pair</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">h</span><span class="p">[</span><span class="n">pair</span><span class="p">[</span><span class="mi">0</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">pair</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="c1"># [:-1] to remove the trailing colon</span>
+    
+    <span class="c1">###############</span>
+    <span class="c1"># parse table #</span>
+    <span class="c1">###############</span>
+
+    <span class="n">lines_t</span> <span class="o">=</span> <span class="p">[</span><span class="n">l</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lines_t</span><span class="p">]</span> <span class="c1"># remove line feed</span>
+    <span class="n">lines_t</span> <span class="o">=</span> <span class="p">[</span><span class="n">l</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lines_t</span> <span class="k">if</span> <span class="n">l</span><span class="p">]</span> <span class="c1"># remove blank lines</span>
+
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[</span><span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">sep</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lines_t</span><span class="p">]</span>
+
+    <span class="n">keys</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">i_start_values</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># first, scan for the non-table part at the beginning</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rows</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="c1"># if the 0th cell in the row is blank, it is a header row</span>
+            <span class="n">h</span><span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span> <span class="c1"># the first row with non-blank 0th cell is the key row</span>
+            <span class="n">keys</span> <span class="o">=</span> <span class="n">row</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">i_start_values</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">break</span> <span class="c1"># get out of the loop as soon as the above row is found</span>
+    
+    <span class="n">cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">row</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">[</span><span class="n">i_start_values</span><span class="p">:]]))</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">c</span><span class="p">])</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cols</span><span class="p">]</span>
+
+    <span class="n">out</span> <span class="o">=</span> <span class="n">hicsv</span><span class="o">.</span><span class="n">hicsv</span><span class="p">()</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">cols</span><span class="p">):</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append_column</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">out</span></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">snpl 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../snpl.html" >snpl</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">snpl.bod</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Shintaro Nakagawa.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.0.0.
+    </div>
+  </body>
+</html>

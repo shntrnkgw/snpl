@@ -5,7 +5,7 @@
 import numpy as np
 from snpl import __version__    
 
-class NpzImage(object):
+class NpzImage:
     """I/O interface for NpzImage file. 
     
     NpzImage is a convenient file format to store 

@@ -1,0 +1,179 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>snpl.rheo module &#8212; snpl 0.3.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinxdoc.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="snpl.tensile module" href="snpl.tensile.html" />
+    <link rel="prev" title="snpl.image module" href="snpl.image.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="snpl.tensile.html" title="snpl.tensile module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="snpl.image.html" title="snpl.image module"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">snpl 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="snpl.html" accesskey="U">snpl package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">snpl.rheo module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-snpl.rheo">
+<span id="snpl-rheo-module"></span><h1>snpl.rheo module<a class="headerlink" href="#module-snpl.rheo" title="Permalink to this heading">¶</a></h1>
+<p>I/O interfaces and utilities for various rheology data.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="snpl.rheo.load_RheologyAdvantageBinary">
+<span class="sig-prename descclassname"><span class="pre">snpl.rheo.</span></span><span class="sig-name descname"><span class="pre">load_RheologyAdvantageBinary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'utf-16'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/rheo.html#load_RheologyAdvantageBinary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.rheo.load_RheologyAdvantageBinary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads a RheologyAdvantage raw data (.rsl) file into a list of <code class="docutils literal notranslate"><span class="pre">hicsv.hicsv</span></code> objects.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fp</strong> (<em>str</em><em> or </em><em>file-like</em>) – Path or file-like object of the source file.</p></li>
+<li><p><strong>encoding</strong> (<em>str</em>) – Encoding of the unicode strings in the source file. Defaults to utf-16.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of <code class="docutils literal notranslate"><span class="pre">hicsv.hicsv</span></code> objects, each representing one step.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">snpl</span><span class="o">.</span><span class="n">rheo</span><span class="o">.</span><span class="n">load_RheologyAdvantageData</span><span class="p">(</span><span class="s2">&quot;test_data-0001o.rsl&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">)</span>
+<span class="go">[&#39;frequency [Hz]&#39;, &#39;time [s]&#39;, ... ,&#39;normal force [N]&#39;, &#39;gap [um]&#39;]</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Currently, (mostly) only the geometry info is available.
+Additional header info may be obtained in the future update.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snpl.rheo.load_RheologyAdvantageExported">
+<span class="sig-prename descclassname"><span class="pre">snpl.rheo.</span></span><span class="sig-name descname"><span class="pre">load_RheologyAdvantageExported</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'shift-jis'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/rheo.html#load_RheologyAdvantageExported"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.rheo.load_RheologyAdvantageExported" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads a text file exported by RheologyAdvantage software.</p>
+<p>Only compatible with the exported files with “full” header info.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fp</strong> (<em>str</em><em> or </em><em>file-like</em>) – Path or file-like object of the source text file.</p></li>
+<li><p><strong>encoding</strong> (<em>str</em>) – Encoding of the source file. Defaults to shift-jis.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of <code class="docutils literal notranslate"><span class="pre">hicsv.hicsv</span></code> objects, each corresponding to one step in the experiment.
+Only the steps whose data table appears in the source file will be included.
+That is, the steps without a table is ignored.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">snpl</span><span class="o">.</span><span class="n">rheo</span><span class="o">.</span><span class="n">load_RheologyAdvantageExported</span><span class="p">(</span><span class="s2">&quot;test data-0001o exp.txt&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">d</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;Step name&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.txt&quot;</span><span class="p">)</span> <span class="c1"># save available steps, using the step name as the file name</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">snpl.rheo module</a><ul>
+<li><a class="reference internal" href="#snpl.rheo.load_RheologyAdvantageBinary"><code class="docutils literal notranslate"><span class="pre">load_RheologyAdvantageBinary()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.rheo.load_RheologyAdvantageExported"><code class="docutils literal notranslate"><span class="pre">load_RheologyAdvantageExported()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="snpl.image.html"
+                          title="previous chapter">snpl.image module</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="snpl.tensile.html"
+                          title="next chapter">snpl.tensile module</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/snpl.rheo.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="snpl.tensile.html" title="snpl.tensile module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="snpl.image.html" title="snpl.image module"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">snpl 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="snpl.html" >snpl package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">snpl.rheo module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Shintaro Nakagawa.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.0.0.
+    </div>
+  </body>
+</html>

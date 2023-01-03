@@ -1,0 +1,7 @@
+snpl.fit module
+===============
+
+.. automodule:: snpl.fit
+   :members:
+   :undoc-members:
+   :show-inheritance:

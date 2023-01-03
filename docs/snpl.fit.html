@@ -1,0 +1,514 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>snpl.fit module &#8212; snpl 0.3.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinxdoc.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="snpl.gpc module" href="snpl.gpc.html" />
+    <link rel="prev" title="snpl.bod module" href="snpl.bod.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="snpl.gpc.html" title="snpl.gpc module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="snpl.bod.html" title="snpl.bod module"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">snpl 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="snpl.html" accesskey="U">snpl package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">snpl.fit module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-snpl.fit">
+<span id="snpl-fit-module"></span><h1>snpl.fit module<a class="headerlink" href="#module-snpl.fit" title="Permalink to this heading">¶</a></h1>
+<p>Utilities for curve fitting analyses</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This module is not really useful anymore.
+It is encouraged to use directly the <code class="docutils literal notranslate"><span class="pre">scipy.optimize</span></code> package instead.</p>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="snpl.fit.AreaGaussian">
+<span class="sig-prename descclassname"><span class="pre">snpl.fit.</span></span><span class="sig-name descname"><span class="pre">AreaGaussian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#AreaGaussian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.AreaGaussian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snpl.fit.AreaLorentzian">
+<span class="sig-prename descclassname"><span class="pre">snpl.fit.</span></span><span class="sig-name descname"><span class="pre">AreaLorentzian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#AreaLorentzian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.AreaLorentzian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snpl.fit.AreaPseudoVoigt">
+<span class="sig-prename descclassname"><span class="pre">snpl.fit.</span></span><span class="sig-name descname"><span class="pre">AreaPseudoVoigt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#AreaPseudoVoigt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.AreaPseudoVoigt" title="Permalink to this definition">¶</a></dt>
+<dd><p>I think it’s ok…</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snpl.fit.Baseline">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snpl.fit.</span></span><span class="sig-name descname"><span class="pre">Baseline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xdata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ydata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Baseline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Baseline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#snpl.fit.Function" title="snpl.fit.Function"><code class="xref py py-class docutils literal notranslate"><span class="pre">Function</span></code></a></p>
+<p>A class for baseline.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snpl.fit.BaselineStable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snpl.fit.</span></span><span class="sig-name descname"><span class="pre">BaselineStable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xdata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ydata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">left</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hwidth</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#BaselineStable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.BaselineStable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#snpl.fit.Function" title="snpl.fit.Function"><code class="xref py py-class docutils literal notranslate"><span class="pre">Function</span></code></a></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snpl.fit.EMG">
+<span class="sig-prename descclassname"><span class="pre">snpl.fit.</span></span><span class="sig-name descname"><span class="pre">EMG</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#EMG"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.EMG" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snpl.fit.Function">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snpl.fit.</span></span><span class="sig-name descname"><span class="pre">Function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">share</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lock</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">lineprops</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Function.Bound">
+<span class="sig-name descname"><span class="pre">Bound</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(-inf,</span> <span class="pre">inf)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Function.Bound"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Function.Bound" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specify the boundary for the parameter.
+&#64;param ind: index of the target parameter
+&#64;param bound: two-tuple of the lower and upper boundary.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Function.Decode">
+<span class="sig-name descname"><span class="pre">Decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Function.Decode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Function.Decode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes the “full” parameters containing locked parameters,
+from the “partial” parameters excluding locked ones.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Function.DecodeErrors">
+<span class="sig-name descname"><span class="pre">DecodeErrors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">errors</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Function.DecodeErrors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Function.DecodeErrors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes the “full” parameters containing locked parameters,
+from the “partial” parameters excluding locked ones.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Function.Encode">
+<span class="sig-name descname"><span class="pre">Encode</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Function.Encode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Function.Encode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes the “partial” parameters &amp; bounds excluding locked parameters,
+from the currently-set parameters &amp; errors.
+&#64;return: two-tuple of lists</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Function.Evaluate">
+<span class="sig-name descname"><span class="pre">Evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Function.Evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Function.Evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the value of the function at x with current parameters.
+&#64;return: float number</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Function.EvaluateWithParam">
+<span class="sig-name descname"><span class="pre">EvaluateWithParam</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Function.EvaluateWithParam"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Function.EvaluateWithParam" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the value of the function at x with given parameters.
+NOTE: This method doesn’t overwrite the parameters held by this class.
+&#64;return: float number</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Function.EvaluateWithPartialParam">
+<span class="sig-name descname"><span class="pre">EvaluateWithPartialParam</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Function.EvaluateWithPartialParam"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Function.EvaluateWithPartialParam" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the value of the function at x with given parameters.
+This method doesn’t overwrite the parameters held by this class.
+Unlike EvaluateWithParam(), this method accepts a “partial” parameter
+excluding locked values.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Function.Fit">
+<span class="sig-name descname"><span class="pre">Fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Function.Fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Function.Fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit the model to given data set.
+&#64;param xs: array of x
+&#64;param ys: array of y
+&#64;param sigma: array of std. dev., optional</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Function.GetLineProps">
+<span class="sig-name descname"><span class="pre">GetLineProps</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Function.GetLineProps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Function.GetLineProps" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Function.GetParameterLength">
+<span class="sig-name descname"><span class="pre">GetParameterLength</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Function.GetParameterLength"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Function.GetParameterLength" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of parameters needed (including locked/shared parameters).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Function.GetParamsHeadersString">
+<span class="sig-name descname"><span class="pre">GetParamsHeadersString</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fmt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'{0:&gt;15s}'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'\t'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Function.GetParamsHeadersString"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Function.GetParamsHeadersString" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a formatted string of parameter headers.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Function.GetParamsString">
+<span class="sig-name descname"><span class="pre">GetParamsString</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fmt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'{0:&gt;15f}'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'\t'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Function.GetParamsString"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Function.GetParamsString" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Function.GetPlotData">
+<span class="sig-name descname"><span class="pre">GetPlotData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xlog</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baseline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Function.GetPlotData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Function.GetPlotData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make the arrays for plotting functions.
+&#64;param start: starting value for x
+&#64;param stop: stopping value for x
+&#64;param num: number of points
+&#64;param xlog: If True, x will be evenly spaced in log scale.
+&#64;param baseline: another Function() instance
+&#64;return: (array of x, array of y)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Function.Integrate">
+<span class="sig-name descname"><span class="pre">Integrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Function.Integrate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Function.Integrate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Function.Lock">
+<span class="sig-name descname"><span class="pre">Lock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Function.Lock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Function.Lock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lock the parameter(s). Locked parameters don’t change during fitting.
+&#64;param <a href="#id1"><span class="problematic" id="id2">*</span></a>args: index (or indices) of the parameters to be locked. NOT A LIST OF INDICES.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Function.Share">
+<span class="sig-name descname"><span class="pre">Share</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Function.Share"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Function.Share" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specify the parameter(s) to be shared.
+&#64;param <a href="#id3"><span class="problematic" id="id4">*</span></a>args: index (or indices) of the parameters to be shared. NOT A LIST OF INDICES.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Function.Unbound">
+<span class="sig-name descname"><span class="pre">Unbound</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ind</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Function.Unbound"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Function.Unbound" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Function.Unlock">
+<span class="sig-name descname"><span class="pre">Unlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Function.Unlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Function.Unlock" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Function.Unshare">
+<span class="sig-name descname"><span class="pre">Unshare</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Function.Unshare"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Function.Unshare" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Function.Update">
+<span class="sig-name descname"><span class="pre">Update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Function.Update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Function.Update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overwrite parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Function.UpdateParameter">
+<span class="sig-name descname"><span class="pre">UpdateParameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Function.UpdateParameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Function.UpdateParameter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the currently-set parameter &amp; error info
+with the given “partial” parameter &amp; error excluding locked values.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snpl.fit.Gaussian">
+<span class="sig-prename descclassname"><span class="pre">snpl.fit.</span></span><span class="sig-name descname"><span class="pre">Gaussian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Gaussian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Gaussian" title="Permalink to this definition">¶</a></dt>
+<dd><p>p[0]: amp
+p[1]: position
+p[2]: fwhm</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snpl.fit.Line">
+<span class="sig-prename descclassname"><span class="pre">snpl.fit.</span></span><span class="sig-name descname"><span class="pre">Line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Line"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Line" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snpl.fit.Lorentzian">
+<span class="sig-prename descclassname"><span class="pre">snpl.fit.</span></span><span class="sig-name descname"><span class="pre">Lorentzian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Lorentzian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Lorentzian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snpl.fit.Model">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snpl.fit.</span></span><span class="sig-name descname"><span class="pre">Model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">funcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class for fitting model function composed of multiple functions.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Model.AddFunction">
+<span class="sig-name descname"><span class="pre">AddFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Model.AddFunction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Model.AddFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>add a function to the model
+&#64;param func: Function object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Model.Decode">
+<span class="sig-name descname"><span class="pre">Decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Model.Decode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Model.Decode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Chop the given parameters into parameter lists for each function.
+&#64;param params: a list of parameters
+&#64;return: a list of lists of parameters (ret[i][j]: jth parameter of ith function)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Model.Encode">
+<span class="sig-name descname"><span class="pre">Encode</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Model.Encode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Model.Encode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of current parameters (considering locked and shared parameters)
+&#64;return: a list of parameters and a list of two-tuples of bounds</p>
+<p>20160930 added bounds tuples</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Model.Evaluate">
+<span class="sig-name descname"><span class="pre">Evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Model.Evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Model.Evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evalute the model using currently set parameters.
+&#64;param x: x</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Model.EvaluateWithParams">
+<span class="sig-name descname"><span class="pre">EvaluateWithParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Model.EvaluateWithParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Model.EvaluateWithParams" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate the model using x and given parameters.
+Note that the parameters given here do not affect
+the parameters of this instance.
+To update the parameters of the instance,
+call self.UpdateParameters.
+&#64;param x:
+&#64;param <a href="#id5"><span class="problematic" id="id6">*</span></a>params: parameters</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Model.Fit">
+<span class="sig-name descname"><span class="pre">Fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Model.Fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Model.Fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit the model to given data set.
+&#64;param xs: array of x
+&#64;param ys: array of y
+&#64;param sigma: array of std. dev., optional</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Model.GetPlotData">
+<span class="sig-name descname"><span class="pre">GetPlotData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xlog</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baseline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Model.GetPlotData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Model.GetPlotData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make the arrays for plotting functions.
+&#64;param start: starting value for x
+&#64;param stop: stopping value for x
+&#64;param num: number of points
+&#64;param xlog: use x evenly spaced in log space if True.
+&#64;param ind: index of a function to be plotted. If None, the data for whole model will be evaluated.
+&#64;param baseline: another Function() object
+&#64;return: (array of x, array of y)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Model.UpdateEncoderMap">
+<span class="sig-name descname"><span class="pre">UpdateEncoderMap</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Model.UpdateEncoderMap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Model.UpdateEncoderMap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a map for encoding parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Model.UpdateParameters">
+<span class="sig-name descname"><span class="pre">UpdateParameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Model.UpdateParameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Model.UpdateParameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the parameters with given parameter list.
+&#64;param params: a list of parameters</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snpl.fit.Parabolic">
+<span class="sig-prename descclassname"><span class="pre">snpl.fit.</span></span><span class="sig-name descname"><span class="pre">Parabolic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Parabolic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Parabolic" title="Permalink to this definition">¶</a></dt>
+<dd><p>p[0]: height (&gt;0)
+p[1]: position
+p[2]: full width at half maximum (fwhm)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snpl.fit.PseudoVoigt">
+<span class="sig-prename descclassname"><span class="pre">snpl.fit.</span></span><span class="sig-name descname"><span class="pre">PseudoVoigt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#PseudoVoigt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.PseudoVoigt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gaussian-Lorentzian Sum (Amplitude), from PeakFit v4.12 Manual 7-11</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="snpl.fit.Residuals">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">snpl.fit.</span></span><span class="sig-name descname"><span class="pre">Residuals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">residuals_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Residuals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Residuals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class for general least-square optimization.
+It calculates the sum of squared residuals and try to minimize it
+with respect to the parameters, starting from p0.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Residuals.Bound">
+<span class="sig-name descname"><span class="pre">Bound</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(-inf,</span> <span class="pre">inf)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Residuals.Bound"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Residuals.Bound" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specify the boundary for the parameter.
+&#64;param ind: index of the target parameter
+&#64;param bound: two-tuple of the lower and upper boundary.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="snpl.fit.Residuals.Fit">
+<span class="sig-name descname"><span class="pre">Fit</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Residuals.Fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Residuals.Fit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snpl.fit.SplitGaussian">
+<span class="sig-prename descclassname"><span class="pre">snpl.fit.</span></span><span class="sig-name descname"><span class="pre">SplitGaussian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#SplitGaussian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.SplitGaussian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snpl.fit.Voigt">
+<span class="sig-prename descclassname"><span class="pre">snpl.fit.</span></span><span class="sig-name descname"><span class="pre">Voigt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/fit.html#Voigt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.fit.Voigt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">snpl.fit module</a><ul>
+<li><a class="reference internal" href="#snpl.fit.AreaGaussian"><code class="docutils literal notranslate"><span class="pre">AreaGaussian()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.AreaLorentzian"><code class="docutils literal notranslate"><span class="pre">AreaLorentzian()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.AreaPseudoVoigt"><code class="docutils literal notranslate"><span class="pre">AreaPseudoVoigt()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Baseline"><code class="docutils literal notranslate"><span class="pre">Baseline</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.BaselineStable"><code class="docutils literal notranslate"><span class="pre">BaselineStable</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.EMG"><code class="docutils literal notranslate"><span class="pre">EMG()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Function"><code class="docutils literal notranslate"><span class="pre">Function</span></code></a><ul>
+<li><a class="reference internal" href="#snpl.fit.Function.Bound"><code class="docutils literal notranslate"><span class="pre">Function.Bound()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Function.Decode"><code class="docutils literal notranslate"><span class="pre">Function.Decode()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Function.DecodeErrors"><code class="docutils literal notranslate"><span class="pre">Function.DecodeErrors()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Function.Encode"><code class="docutils literal notranslate"><span class="pre">Function.Encode()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Function.Evaluate"><code class="docutils literal notranslate"><span class="pre">Function.Evaluate()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Function.EvaluateWithParam"><code class="docutils literal notranslate"><span class="pre">Function.EvaluateWithParam()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Function.EvaluateWithPartialParam"><code class="docutils literal notranslate"><span class="pre">Function.EvaluateWithPartialParam()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Function.Fit"><code class="docutils literal notranslate"><span class="pre">Function.Fit()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Function.GetLineProps"><code class="docutils literal notranslate"><span class="pre">Function.GetLineProps()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Function.GetParameterLength"><code class="docutils literal notranslate"><span class="pre">Function.GetParameterLength()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Function.GetParamsHeadersString"><code class="docutils literal notranslate"><span class="pre">Function.GetParamsHeadersString()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Function.GetParamsString"><code class="docutils literal notranslate"><span class="pre">Function.GetParamsString()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Function.GetPlotData"><code class="docutils literal notranslate"><span class="pre">Function.GetPlotData()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Function.Integrate"><code class="docutils literal notranslate"><span class="pre">Function.Integrate()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Function.Lock"><code class="docutils literal notranslate"><span class="pre">Function.Lock()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Function.Share"><code class="docutils literal notranslate"><span class="pre">Function.Share()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Function.Unbound"><code class="docutils literal notranslate"><span class="pre">Function.Unbound()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Function.Unlock"><code class="docutils literal notranslate"><span class="pre">Function.Unlock()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Function.Unshare"><code class="docutils literal notranslate"><span class="pre">Function.Unshare()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Function.Update"><code class="docutils literal notranslate"><span class="pre">Function.Update()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Function.UpdateParameter"><code class="docutils literal notranslate"><span class="pre">Function.UpdateParameter()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#snpl.fit.Gaussian"><code class="docutils literal notranslate"><span class="pre">Gaussian()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Line"><code class="docutils literal notranslate"><span class="pre">Line()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Lorentzian"><code class="docutils literal notranslate"><span class="pre">Lorentzian()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Model"><code class="docutils literal notranslate"><span class="pre">Model</span></code></a><ul>
+<li><a class="reference internal" href="#snpl.fit.Model.AddFunction"><code class="docutils literal notranslate"><span class="pre">Model.AddFunction()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Model.Decode"><code class="docutils literal notranslate"><span class="pre">Model.Decode()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Model.Encode"><code class="docutils literal notranslate"><span class="pre">Model.Encode()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Model.Evaluate"><code class="docutils literal notranslate"><span class="pre">Model.Evaluate()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Model.EvaluateWithParams"><code class="docutils literal notranslate"><span class="pre">Model.EvaluateWithParams()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Model.Fit"><code class="docutils literal notranslate"><span class="pre">Model.Fit()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Model.GetPlotData"><code class="docutils literal notranslate"><span class="pre">Model.GetPlotData()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Model.UpdateEncoderMap"><code class="docutils literal notranslate"><span class="pre">Model.UpdateEncoderMap()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Model.UpdateParameters"><code class="docutils literal notranslate"><span class="pre">Model.UpdateParameters()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#snpl.fit.Parabolic"><code class="docutils literal notranslate"><span class="pre">Parabolic()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.PseudoVoigt"><code class="docutils literal notranslate"><span class="pre">PseudoVoigt()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Residuals"><code class="docutils literal notranslate"><span class="pre">Residuals</span></code></a><ul>
+<li><a class="reference internal" href="#snpl.fit.Residuals.Bound"><code class="docutils literal notranslate"><span class="pre">Residuals.Bound()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Residuals.Fit"><code class="docutils literal notranslate"><span class="pre">Residuals.Fit()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#snpl.fit.SplitGaussian"><code class="docutils literal notranslate"><span class="pre">SplitGaussian()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.fit.Voigt"><code class="docutils literal notranslate"><span class="pre">Voigt()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="snpl.bod.html"
+                          title="previous chapter">snpl.bod module</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="snpl.gpc.html"
+                          title="next chapter">snpl.gpc module</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/snpl.fit.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="snpl.gpc.html" title="snpl.gpc module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="snpl.bod.html" title="snpl.bod module"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">snpl 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="snpl.html" >snpl package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">snpl.fit module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Shintaro Nakagawa.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.0.0.
+    </div>
+  </body>
+</html>

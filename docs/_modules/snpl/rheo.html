@@ -1,0 +1,722 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snpl.rheo &#8212; snpl 0.3.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinxdoc.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">snpl 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../snpl.html" accesskey="U">snpl</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">snpl.rheo</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for snpl.rheo</h1><div class="highlight"><pre>
+<span></span><span class="c1"># coding=utf-8</span>
+<span class="sd">&quot;&quot;&quot;I/O interfaces and utilities for various rheology data. </span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">hicsv</span>
+
+<span class="kn">import</span> <span class="nn">olefile</span>
+<span class="kn">import</span> <span class="nn">struct</span>
+
+<span class="kn">import</span> <span class="nn">os.path</span>
+
+<span class="n">KEYS</span> <span class="o">=</span> <span class="p">{</span> <span class="mi">6</span><span class="p">:</span> <span class="s2">&quot;gap [um]&quot;</span><span class="p">,</span> 
+        <span class="mi">23</span><span class="p">:</span> <span class="s2">&quot;time [s]&quot;</span><span class="p">,</span>
+        <span class="mi">25</span><span class="p">:</span> <span class="s2">&quot;sweep number?&quot;</span><span class="p">,</span>
+        <span class="mi">26</span><span class="p">:</span> <span class="s2">&quot;temperature [C]&quot;</span><span class="p">,</span>
+        <span class="mi">27</span><span class="p">:</span> <span class="s2">&quot;torque [N m]&quot;</span><span class="p">,</span>
+        <span class="mi">29</span><span class="p">:</span> <span class="s2">&quot;velocity [rad/s]&quot;</span><span class="p">,</span>
+        <span class="mi">32</span><span class="p">:</span> <span class="s2">&quot;osc. torque [N m]&quot;</span><span class="p">,</span>
+        <span class="mi">34</span><span class="p">:</span> <span class="s2">&quot;displacement [rad]&quot;</span><span class="p">,</span>
+        <span class="mi">35</span><span class="p">:</span> <span class="s2">&quot;displacement [rad]&quot;</span><span class="p">,</span>
+        <span class="mi">39</span><span class="p">:</span> <span class="s2">&quot;frequency [Hz]&quot;</span><span class="p">,</span>
+        <span class="mi">41</span><span class="p">:</span> <span class="s2">&quot;raw phase [rad]&quot;</span><span class="p">,</span>
+        <span class="mi">50</span><span class="p">:</span> <span class="s2">&quot;normal force [N]&quot;</span><span class="p">}</span>
+
+<span class="n">KEYS_GEOMETRY</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1001</span><span class="p">:</span> <span class="s2">&quot;shear rate factor&quot;</span><span class="p">,</span> 
+                 <span class="mi">1002</span><span class="p">:</span> <span class="s2">&quot;shear stress factor [m-3]&quot;</span><span class="p">,</span> 
+                 <span class="mi">1003</span><span class="p">:</span> <span class="s2">&quot;measurement system factor [m-3]&quot;</span><span class="p">,</span> 
+                 <span class="mi">1004</span><span class="p">:</span> <span class="s2">&quot;fluid density factor [m5]&quot;</span><span class="p">,</span> 
+                 <span class="mi">1005</span><span class="p">:</span> <span class="s2">&quot;normal force factor [m-2]&quot;</span><span class="p">,</span> 
+                 <span class="mi">1051</span><span class="p">:</span> <span class="s2">&quot;geometry intertia [N m s2]&quot;</span><span class="p">,</span> 
+                  <span class="mi">100</span><span class="p">:</span> <span class="s2">&quot;backoff distance [um]&quot;</span><span class="p">,</span> 
+                    <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;gap? [um]&quot;</span><span class="p">,</span> 
+                    <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;geometry diameter [m]&quot;</span><span class="p">}</span>
+
+<span class="c1"># KEYS = {</span>
+<span class="c1">#     0x27: &quot;frequency [Hz]&quot;, </span>
+<span class="c1">#     0x17: &quot;time [s]&quot;, </span>
+<span class="c1">#     0x1a: &quot;temperature [C]&quot;, </span>
+<span class="c1">#     0x19: &quot;index&quot;, </span>
+<span class="c1">#     0x20: &quot;oscillation torque [N m]&quot;, </span>
+<span class="c1">#     0x29: &quot;raw phase [rad]&quot;, </span>
+<span class="c1">#     0x22: &quot;displacement [rad]&quot;, </span>
+<span class="c1">#     0x23: &quot;displacement [rad]&quot;, </span>
+<span class="c1">#     0x1b: &quot;torque [N m]&quot;,</span>
+<span class="c1">#     0x1d: &quot;velocity [rad s-1]&quot;, </span>
+<span class="c1">#     0x32: &quot;normal force [N]&quot;, </span>
+<span class="c1">#     0x06: &quot;gap [um]&quot;</span>
+<span class="c1">#     }</span>
+
+<span class="n">GTYPE_CP</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">([</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="n">GTYPE_PP</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">([</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+
+<div class="viewcode-block" id="load_RheologyAdvantageBinary"><a class="viewcode-back" href="../../snpl.rheo.html#snpl.rheo.load_RheologyAdvantageBinary">[docs]</a><span class="k">def</span> <span class="nf">load_RheologyAdvantageBinary</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-16&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Loads a RheologyAdvantage raw data (.rsl) file into a list of ``hicsv.hicsv`` objects. </span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        fp (str or file-like): Path or file-like object of the source file. </span>
+<span class="sd">        encoding (str): Encoding of the unicode strings in the source file. Defaults to utf-16. </span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A list of ``hicsv.hicsv`` objects, each representing one step. </span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; ds = snpl.rheo.load_RheologyAdvantageData(&quot;test_data-0001o.rsl&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; print(ds[0].keys)</span>
+<span class="sd">        [&#39;frequency [Hz]&#39;, &#39;time [s]&#39;, ... ,&#39;normal force [N]&#39;, &#39;gap [um]&#39;]</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        Currently, (mostly) only the geometry info is available. </span>
+<span class="sd">        Additional header info may be obtained in the future update. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">src</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">src</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">fp</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    
+    <span class="k">with</span> <span class="n">olefile</span><span class="o">.</span><span class="n">OleFileIO</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        
+        <span class="c1"># geometry information</span>
+        <span class="n">geo</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">with</span> <span class="n">f</span><span class="o">.</span><span class="n">openstream</span><span class="p">([</span><span class="s1">&#39;Embedding 2&#39;</span><span class="p">,</span> <span class="s1">&#39;Geometry&#39;</span><span class="p">])</span> <span class="k">as</span> <span class="n">s</span><span class="p">:</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+            
+            <span class="n">offset</span><span class="p">,</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;i&quot;</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+            <span class="n">geo</span><span class="p">[</span><span class="s2">&quot;Geometry name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoding</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\u0000</span><span class="s2">&quot;</span><span class="p">)</span>
+                                    
+            <span class="n">offset</span><span class="p">,</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;i&quot;</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+            <span class="n">geo</span><span class="p">[</span><span class="s2">&quot;Geometry description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoding</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\u0000</span><span class="s2">&quot;</span><span class="p">)</span>
+            
+            <span class="n">gsig</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span> <span class="c1"># This seems to indicate geometry type? </span>
+            
+            <span class="k">if</span> <span class="n">gsig</span> <span class="o">==</span> <span class="n">GTYPE_PP</span><span class="p">:</span>
+                <span class="n">geo</span><span class="p">[</span><span class="s2">&quot;Geometry type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;PP&quot;</span>
+                <span class="n">geo</span><span class="p">[</span><span class="s2">&quot;Diameter [m]&quot;</span><span class="p">],</span>              <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;d&quot;</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">8</span><span class="p">))</span>
+                <span class="n">geo</span><span class="p">[</span><span class="s2">&quot;Gap [um]&quot;</span><span class="p">],</span>                  <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;d&quot;</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">8</span><span class="p">))</span>
+                <span class="n">geo</span><span class="p">[</span><span class="s2">&quot;Backoff distance [um]&quot;</span><span class="p">],</span>     <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;d&quot;</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">8</span><span class="p">))</span>
+                <span class="n">geo</span><span class="p">[</span><span class="s2">&quot;Geometry inertia [N m s2]&quot;</span><span class="p">],</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;d&quot;</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">8</span><span class="p">))</span>
+                <span class="n">geo</span><span class="p">[</span><span class="s2">&quot;Geometry compliance [rad N-1 m-1]&quot;</span><span class="p">],</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;d&quot;</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">8</span><span class="p">))</span>
+            
+            <span class="k">elif</span> <span class="n">gsig</span> <span class="o">==</span> <span class="n">GTYPE_CP</span><span class="p">:</span>
+                <span class="n">geo</span><span class="p">[</span><span class="s2">&quot;Geometry type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;CP&quot;</span>        
+                <span class="n">geo</span><span class="p">[</span><span class="s2">&quot;Angle [s]&quot;</span><span class="p">],</span>                 <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;d&quot;</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">8</span><span class="p">))</span> 
+                <span class="n">geo</span><span class="p">[</span><span class="s2">&quot;Diameter [m]&quot;</span><span class="p">],</span>              <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;d&quot;</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">8</span><span class="p">))</span>
+                <span class="n">geo</span><span class="p">[</span><span class="s2">&quot;Truncation gap [um]&quot;</span><span class="p">],</span>       <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;d&quot;</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">8</span><span class="p">))</span>
+                <span class="n">geo</span><span class="p">[</span><span class="s2">&quot;Backoff distance [um]&quot;</span><span class="p">],</span>     <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;d&quot;</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">8</span><span class="p">))</span>
+                <span class="n">geo</span><span class="p">[</span><span class="s2">&quot;Geometry inertia [N m s2]&quot;</span><span class="p">],</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;d&quot;</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">8</span><span class="p">))</span>
+                <span class="n">geo</span><span class="p">[</span><span class="s2">&quot;Gemetry compliance [rad N-1 m-1]&quot;</span><span class="p">],</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;d&quot;</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">8</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">geo</span><span class="p">[</span><span class="s2">&quot;Geometry type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span>
+                
+        <span class="n">num</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">cs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Results&quot;</span><span class="p">,</span> <span class="s2">&quot;Results</span><span class="si">{0:d}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+                <span class="k">break</span>
+            
+            <span class="n">c</span> <span class="o">=</span> <span class="n">hicsv</span><span class="o">.</span><span class="n">hicsv</span><span class="p">()</span>
+            
+            <span class="k">with</span> <span class="n">f</span><span class="o">.</span><span class="n">openstream</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">s</span><span class="p">:</span>
+                <span class="n">s</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+                    
+                <span class="n">offset</span><span class="p">,</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;i&quot;</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+                            
+                <span class="n">step</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoding</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\u0000</span><span class="s2">&quot;</span><span class="p">)</span>
+                            
+                <span class="n">s</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                
+                <span class="n">num_blocks</span><span class="p">,</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;i&quot;</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+                
+                <span class="c1"># begin block</span>
+                <span class="n">ucount</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">for</span> <span class="n">i_block</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_blocks</span><span class="p">):</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">keyb</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                        <span class="k">break</span>
+                    
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">key</span> <span class="o">=</span> <span class="n">KEYS</span><span class="p">[</span><span class="n">keyb</span><span class="p">]</span>
+                    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                        <span class="n">key</span> <span class="o">=</span> <span class="s2">&quot;unknown_</span><span class="si">{0:d}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ucount</span><span class="p">)</span>
+                        <span class="n">ucount</span> <span class="o">+=</span> <span class="mi">1</span>
+                    
+                    <span class="n">hb</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+                    
+                    <span class="n">lb</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+                    
+                    <span class="n">N</span><span class="p">,</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;i&quot;</span><span class="p">,</span> <span class="n">lb</span><span class="p">)</span>
+                    
+                    <span class="n">s</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                    
+                    <span class="n">arr</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{0:d}</span><span class="s2">f&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">N</span><span class="p">),</span> <span class="n">s</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">N</span><span class="o">*</span><span class="mi">4</span><span class="p">))</span>
+                    
+                    <span class="n">c</span><span class="o">.</span><span class="n">append_column</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">arr</span><span class="p">))</span>
+                
+                <span class="n">num</span> <span class="o">+=</span> <span class="mi">1</span>
+            
+            <span class="n">c</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;Step name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">step</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;Step number&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;Source file path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">src</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">geo</span><span class="p">)</span>
+            
+            <span class="n">cs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cs</span></div>
+
+
+<span class="c1"># def calc_RheoAdvantage_CompModulus():</span>
+
+<span class="k">def</span> <span class="nf">_calc_RheologyAdvantageSteadyViscosity</span><span class="p">(</span><span class="n">fp</span><span class="p">):</span>
+    
+    <span class="n">c</span> <span class="o">=</span> <span class="n">hicsv</span><span class="o">.</span><span class="n">hicsv</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;Geometry type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;CP&quot;</span><span class="p">:</span>
+        <span class="n">R_m</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;Diameter [m]&quot;</span><span class="p">]</span><span class="o">/</span><span class="mf">2.0</span>
+        <span class="n">alpha_rad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;Angle [s]&quot;</span><span class="p">]</span><span class="o">/</span><span class="mf">3600.0</span><span class="p">)</span>
+        
+        <span class="n">Fsig</span> <span class="o">=</span> <span class="mf">3.0</span><span class="o">/</span><span class="p">(</span><span class="mf">2.0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">R_m</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">Fgam</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">alpha_rad</span><span class="p">))</span>
+        
+    <span class="k">elif</span> <span class="n">c</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;Geometry type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;PP&quot;</span><span class="p">:</span>
+        <span class="n">R_m</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;Diameter [m]&quot;</span><span class="p">]</span><span class="o">/</span><span class="mf">2.0</span>
+        <span class="n">h_m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;Gap [um]&quot;</span><span class="p">]</span><span class="o">/</span><span class="mf">1e6</span><span class="p">)</span>
+        
+        <span class="n">Fsig</span> <span class="o">=</span> <span class="mf">2.0</span><span class="o">/</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">R_m</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">Fgam</span> <span class="o">=</span> <span class="n">R_m</span><span class="o">/</span><span class="n">h_m</span>
+    
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="kc">False</span>
+        
+    <span class="n">sig_Pa</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">ga</span><span class="p">(</span><span class="s2">&quot;torque [N m]&quot;</span><span class="p">)</span><span class="o">*</span><span class="n">Fsig</span>
+    <span class="n">srate_persec</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">ga</span><span class="p">(</span><span class="s2">&quot;velocity [rad/s]&quot;</span><span class="p">)</span><span class="o">*</span><span class="n">Fgam</span>
+    
+    <span class="n">visc_Pas</span> <span class="o">=</span> <span class="n">sig_Pa</span><span class="o">/</span><span class="n">srate_persec</span>
+    
+    <span class="n">c</span><span class="o">.</span><span class="n">set_column</span><span class="p">(</span><span class="s2">&quot;shear stress [Pa]&quot;</span><span class="p">,</span> <span class="n">sig_Pa</span><span class="p">)</span>
+    <span class="n">c</span><span class="o">.</span><span class="n">set_column</span><span class="p">(</span><span class="s2">&quot;shear rate [/s]&quot;</span><span class="p">,</span> <span class="n">srate_persec</span><span class="p">)</span>
+    <span class="n">c</span><span class="o">.</span><span class="n">set_column</span><span class="p">(</span><span class="s2">&quot;viscosity [Pa s]&quot;</span><span class="p">,</span> <span class="n">visc_Pas</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">c</span>
+
+<span class="k">def</span> <span class="nf">_parse_headerblock_RheologyAdvantageExported</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">current_key</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+        <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">k</span><span class="p">:</span> <span class="c1"># this is the normal case</span>
+            <span class="n">current_key</span> <span class="o">=</span> <span class="n">k</span>
+            <span class="n">h</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+        <span class="k">else</span><span class="p">:</span> <span class="c1"># when the current line starts from tab, it belongs to the parent entry</span>
+            <span class="n">current_value</span> <span class="o">=</span> <span class="n">h</span><span class="p">[</span><span class="n">current_key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current_value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">current_value</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">current_value</span> <span class="o">=</span> <span class="p">[</span><span class="n">current_value</span><span class="p">,</span> <span class="n">v</span><span class="p">]</span>
+                <span class="n">h</span><span class="p">[</span><span class="n">current_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_value</span>
+    
+    <span class="k">return</span> <span class="n">h</span>
+
+<span class="k">def</span> <span class="nf">_parse_table_RheologyAdvantageExported</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+
+    <span class="n">rawkeys</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">units</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+    
+    <span class="n">keys</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">rawkeys</span><span class="p">,</span> <span class="n">units</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">u</span><span class="p">:</span>
+            <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> [</span><span class="si">{1}</span><span class="s2">]&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;′&quot;</span><span class="p">),</span> <span class="n">u</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+    
+    <span class="n">out</span> <span class="o">=</span> <span class="n">hicsv</span><span class="o">.</span><span class="n">hicsv</span><span class="p">()</span>
+    
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">l_</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="mi">2</span><span class="p">:]:</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="n">l_</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">l</span><span class="p">:</span>
+            <span class="k">break</span>
+        
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)])</span>
+
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">keys</span><span class="p">,</span> <span class="n">cols</span>
+    
+<div class="viewcode-block" id="load_RheologyAdvantageExported"><a class="viewcode-back" href="../../snpl.rheo.html#snpl.rheo.load_RheologyAdvantageExported">[docs]</a><span class="k">def</span> <span class="nf">load_RheologyAdvantageExported</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;shift-jis&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Loads a text file exported by RheologyAdvantage software. </span>
+
+<span class="sd">    Only compatible with the exported files with &quot;full&quot; header info. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        fp (str or file-like): Path or file-like object of the source text file. </span>
+<span class="sd">        encoding (str): Encoding of the source file. Defaults to shift-jis. </span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A list of ``hicsv.hicsv`` objects, each corresponding to one step in the experiment. </span>
+<span class="sd">        Only the steps whose data table appears in the source file will be included. </span>
+<span class="sd">        That is, the steps without a table is ignored. </span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; ds = snpl.rheo.load_RheologyAdvantageExported(&quot;test data-0001o exp.txt&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; for d in ds:</span>
+<span class="sd">        &gt;&gt;&gt;     d.save(d.h[&quot;Step name&quot;] + &quot;.txt&quot;) # save available steps, using the step name as the file name</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">fp</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+
+    <span class="n">blocks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">block</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+        <span class="n">line_</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\r</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">line_</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">block</span><span class="p">:</span>
+                <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+                <span class="n">block</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">pass</span> <span class="c1"># ignore more than two empty lines</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">block</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line_</span><span class="p">)</span>
+    
+    <span class="c1"># for block in blocks:</span>
+    <span class="c1">#     print(block[0])</span>
+    
+    <span class="c1"># find the procedure name &amp; step name</span>
+    <span class="n">blocknumber_sample</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">blocknumber_proc</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">blocknumbers_step</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">blocknumber_geometry</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">blocknumber</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">blocks</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">block</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Procedure name</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">):</span>
+            <span class="n">blocknumber_proc</span> <span class="o">=</span> <span class="n">blocknumber</span>
+        <span class="k">elif</span> <span class="n">block</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Step name</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">):</span>
+            <span class="n">blocknumbers_step</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">blocknumber</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">block</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Geometry name</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">):</span>
+            <span class="n">blocknumber_geometry</span> <span class="o">=</span> <span class="n">blocknumber</span>
+        <span class="k">elif</span> <span class="n">block</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Sample name</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">):</span>
+            <span class="n">blocknumber_sample</span> <span class="o">=</span> <span class="n">blocknumber</span>
+    
+    <span class="n">blocknumber_inst</span> <span class="o">=</span> <span class="n">blocknumber_geometry</span> <span class="o">+</span> <span class="mi">1</span> <span class="c1"># this may not always be true...</span>
+    
+    <span class="n">h_sample</span> <span class="o">=</span> <span class="n">_parse_headerblock_RheologyAdvantageExported</span><span class="p">(</span><span class="n">blocks</span><span class="p">[</span><span class="n">blocknumber_sample</span><span class="p">])</span>
+    <span class="n">h_proc</span> <span class="o">=</span> <span class="n">_parse_headerblock_RheologyAdvantageExported</span><span class="p">(</span><span class="n">blocks</span><span class="p">[</span><span class="n">blocknumber_proc</span><span class="p">])</span>
+    <span class="n">h_geometry</span> <span class="o">=</span> <span class="n">_parse_headerblock_RheologyAdvantageExported</span><span class="p">(</span><span class="n">blocks</span><span class="p">[</span><span class="n">blocknumber_geometry</span><span class="p">])</span>
+    <span class="n">h_inst</span> <span class="o">=</span> <span class="n">_parse_headerblock_RheologyAdvantageExported</span><span class="p">(</span><span class="n">blocks</span><span class="p">[</span><span class="n">blocknumber_inst</span><span class="p">])</span>
+    <span class="n">hs_step</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">bn</span> <span class="ow">in</span> <span class="n">blocknumbers_step</span><span class="p">:</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">_parse_headerblock_RheologyAdvantageExported</span><span class="p">(</span><span class="n">blocks</span><span class="p">[</span><span class="n">bn</span><span class="p">])</span>
+        <span class="n">hs_step</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+
+    <span class="n">outs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># parse tables</span>
+    <span class="k">for</span> <span class="n">h_step</span> <span class="ow">in</span> <span class="n">hs_step</span><span class="p">:</span>
+        <span class="n">stepname</span> <span class="o">=</span> <span class="n">h_step</span><span class="p">[</span><span class="s2">&quot;Step name&quot;</span><span class="p">]</span>
+        <span class="n">bn_start</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">bn</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">blocks</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">block</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">stepname</span><span class="p">:</span>
+                <span class="n">bn_start</span> <span class="o">=</span> <span class="n">bn</span>
+                <span class="k">break</span>
+        <span class="k">if</span> <span class="n">bn_start</span><span class="p">:</span>
+            <span class="n">keys</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">_parse_table_RheologyAdvantageExported</span><span class="p">(</span><span class="n">blocks</span><span class="p">[</span><span class="n">bn_start</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">blocks</span><span class="p">[</span><span class="n">bn_start</span> <span class="o">+</span> <span class="mi">2</span><span class="p">])</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">hicsv</span><span class="o">.</span><span class="n">hicsv</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">cols</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">out</span><span class="o">.</span><span class="n">keys</span><span class="p">:</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">append_column</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">col</span><span class="p">)</span>
+            
+            <span class="n">out</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;Experiment Info&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">h_sample</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;Procedure Info&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">h_proc</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;Geometry Info&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">h_geometry</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;Instrument Info&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">h_inst</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;Step Info&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">h_step</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;Step name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">stepname</span>
+            
+            <span class="n">outs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+    
+    <span class="k">return</span> <span class="n">outs</span></div>
+
+
+<span class="k">def</span> <span class="nf">_load_Physica501CSV</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;shift-jis&quot;</span><span class="p">):</span>
+    
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">fp</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">l</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;;&quot;</span><span class="p">,</span> <span class="s2">&quot;,&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">]</span>
+    
+    <span class="n">start_indices</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Data Series Information&quot;</span><span class="p">):</span>
+            <span class="n">start_indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    
+    <span class="n">blocks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">start_indices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">start_indices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">start_indices</span><span class="p">)):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">start_indices</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span><span class="n">start_indices</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">]])</span>
+            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">start_indices</span><span class="p">[</span><span class="n">j</span><span class="p">]:])</span>   
+    
+    <span class="n">csvs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">bid</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">blocks</span><span class="p">):</span>        
+        <span class="n">i_data</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">b</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">l</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+                <span class="n">i_data</span> <span class="o">=</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">2</span>
+                <span class="k">break</span>
+        
+        <span class="n">hlines</span> <span class="o">=</span> <span class="n">b</span><span class="p">[:</span><span class="n">i_data</span><span class="p">]</span>
+        <span class="n">dlines</span> <span class="o">=</span> <span class="n">b</span><span class="p">[</span><span class="n">i_data</span><span class="p">:]</span>
+        
+        <span class="c1"># print(hlines[0], hlines[-1])</span>
+        <span class="c1"># print(dlines[0], dlines[-1])</span>
+        
+        <span class="n">units</span> <span class="o">=</span> <span class="n">dlines</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">dlines</span> <span class="o">=</span> <span class="p">[</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">sep</span><span class="p">)</span> <span class="k">if</span> <span class="n">e</span><span class="p">]</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">dlines</span><span class="p">]</span>
+        
+        <span class="n">csv</span> <span class="o">=</span> <span class="n">hicsv</span><span class="o">.</span><span class="n">hicsv</span><span class="p">()</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="n">dlines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="n">csv</span><span class="o">.</span><span class="n">append_column</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="p">[])</span>
+        
+        <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">dlines</span><span class="p">[</span><span class="mi">2</span><span class="p">:]:</span>
+            <span class="n">elems</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">l</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">l</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">elems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)))</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="n">elems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+            
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">csv</span><span class="o">.</span><span class="n">append_row</span><span class="p">(</span><span class="n">elems</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AssertionError</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">elems</span><span class="p">)</span>
+        
+        <span class="n">csv</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;units&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">units</span>
+        
+        
+        <span class="c1"># parse header</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0:d}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bid</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">hlines</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Name&quot;</span><span class="p">):</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">sep</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        
+        <span class="n">csv</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;Name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+        
+        <span class="n">csvs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">csv</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">csvs</span>
+        
+
+
+<span class="k">def</span> <span class="nf">_load_RheoCompassText</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-16&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Not compatible with the tests having multiple intervals!</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">fp</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">l</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;;&quot;</span><span class="p">,</span> <span class="s2">&quot;,&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">]</span>
+    
+    <span class="n">start_indices</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Test:&quot;</span><span class="p">):</span>
+            <span class="n">start_indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    
+    <span class="n">blocks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">start_indices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">start_indices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">start_indices</span><span class="p">)):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">start_indices</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span><span class="n">start_indices</span><span class="p">[</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">]])</span>
+            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">start_indices</span><span class="p">[</span><span class="n">j</span><span class="p">]:])</span>   
+        
+    <span class="n">csvs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">bid</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">blocks</span><span class="p">):</span>        
+        <span class="c1"># get test name</span>
+        <span class="n">name_test</span> <span class="o">=</span> <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">sep</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># print(&quot;Test name&quot;, name_test)</span>
+        
+        <span class="c1"># search for Interval</span>
+        <span class="n">i_interv</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">b</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Interval:&quot;</span><span class="p">):</span>
+                <span class="n">i_interv</span> <span class="o">=</span> <span class="n">i</span>
+                <span class="k">break</span>
+        
+        <span class="c1"># get keys</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="n">b</span><span class="p">[</span><span class="n">i_interv</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">sep</span><span class="p">)</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">]</span>
+        <span class="c1"># print(&quot;keys&quot;, keys)</span>
+        
+        <span class="c1"># search for the start point of the data</span>
+        <span class="n">i_data</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">b</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">l</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+                <span class="n">i_data</span> <span class="o">=</span> <span class="n">i</span>
+                <span class="k">break</span>
+        
+        <span class="k">if</span> <span class="n">i_data</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="c1"># for empty data block</span>
+            <span class="n">hlines</span> <span class="o">=</span> <span class="n">b</span>
+            <span class="n">dlines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># split header and data lines</span>
+            <span class="n">hlines</span> <span class="o">=</span> <span class="n">b</span><span class="p">[:</span><span class="n">i_data</span><span class="p">]</span>
+            <span class="n">dlines</span> <span class="o">=</span> <span class="n">b</span><span class="p">[</span><span class="n">i_data</span><span class="p">:]</span>
+                
+        <span class="c1"># get units</span>
+        <span class="n">units</span> <span class="o">=</span> <span class="n">hlines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">sep</span><span class="p">)</span>
+        <span class="n">units</span> <span class="o">=</span> <span class="p">[</span><span class="n">u</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">units</span><span class="p">]</span>
+        
+        <span class="c1"># print(&quot;units&quot;, units) </span>
+        
+        
+        
+        <span class="n">keys_comp</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">units</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">u</span><span class="p">:</span>
+                <span class="n">keys_comp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">u</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">keys_comp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+        
+        <span class="c1"># get unique column</span>
+        <span class="n">keys_comp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">keys_comp</span><span class="p">)</span>
+        <span class="n">keys_unique</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">keys_comp</span><span class="p">)</span>
+        
+        <span class="n">column_mapping</span> <span class="o">=</span> <span class="p">[</span><span class="n">keys_comp</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">uk</span><span class="p">)</span> <span class="k">for</span> <span class="n">uk</span> <span class="ow">in</span> <span class="n">keys_unique</span><span class="p">]</span>
+        
+        <span class="n">csv</span> <span class="o">=</span> <span class="n">hicsv</span><span class="o">.</span><span class="n">hicsv</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys_unique</span><span class="p">:</span>
+            <span class="n">csv</span><span class="o">.</span><span class="n">append_column</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="p">[])</span>
+        
+        <span class="n">dlines</span> <span class="o">=</span> <span class="p">[</span> <span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">sep</span><span class="p">)</span> <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">dlines</span><span class="p">]</span>
+        
+        <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">dlines</span><span class="p">:</span>
+            <span class="n">elems</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">l</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">column_mapping</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">elems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)))</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="n">elems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">csv</span><span class="o">.</span><span class="n">append_row</span><span class="p">(</span><span class="n">elems</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AssertionError</span> <span class="k">as</span> <span class="n">er</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">er</span><span class="p">))</span>
+        
+        <span class="n">csv</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;Test name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">name_test</span>
+        
+        
+        <span class="n">csvs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">csv</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">csvs</span>
+
+
+
+<span class="k">def</span> <span class="nf">_load_Physica501Table</span><span class="p">(</span><span class="n">fp</span><span class="p">):</span>
+    <span class="n">tab</span> <span class="o">=</span> <span class="n">_Physica501Table</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">tab</span><span class="o">.</span><span class="n">get_CSV</span><span class="p">()</span>
+    
+
+<span class="k">class</span> <span class="nc">_Physica501Table</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fp</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">delay_sec</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+        
+        <span class="k">if</span> <span class="n">fp</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;shift-jis&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">lines</span> <span class="o">=</span> <span class="n">fp</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+
+            
+            <span class="c1"># search for header line</span>
+            <span class="n">i_header</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Meas. Pts.&quot;</span><span class="p">):</span>
+                    <span class="n">i_header</span> <span class="o">=</span> <span class="n">i</span>
+                    <span class="k">break</span>
+            
+            <span class="n">headers</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="n">i_header</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">units</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="n">i_header</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">lines</span><span class="p">[</span><span class="n">i_header</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">):</span>
+                <span class="n">units</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            
+            <span class="n">di</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">header</span> <span class="ow">in</span> <span class="n">headers</span><span class="p">:</span>
+                <span class="n">di</span><span class="p">[</span><span class="n">header</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            
+            <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i_header</span><span class="o">+</span><span class="mi">2</span><span class="p">:]:</span>
+                
+                <span class="n">data_str</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_str</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">headers</span><span class="p">):</span>
+                    <span class="k">break</span>
+
+                <span class="n">pts</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">data_str</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">datum_str</span><span class="p">,</span> <span class="n">header</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">data_str</span><span class="p">,</span> <span class="n">headers</span><span class="p">):</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">v</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">datum_str</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
+                    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                        <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+                    <span class="n">di</span><span class="p">[</span><span class="n">header</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            
+            <span class="k">for</span> <span class="n">header</span> <span class="ow">in</span> <span class="n">headers</span><span class="p">:</span>
+                <span class="n">di</span><span class="p">[</span><span class="n">header</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">di</span><span class="p">[</span><span class="n">header</span><span class="p">])</span>
+            
+            <span class="c1"># condering delay if header Time is included. </span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">di</span><span class="p">[</span><span class="s2">&quot;Time&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">di</span><span class="p">[</span><span class="s2">&quot;Time&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">delay_sec</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">pass</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="n">units</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dict</span> <span class="o">=</span> <span class="n">di</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pts</span> <span class="o">=</span> <span class="n">pts</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">delay_sec</span> <span class="o">=</span> <span class="n">delay_sec</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">headers</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dict</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pts</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">delay_sec</span> <span class="o">=</span> <span class="n">delay_sec</span>
+        
+    <span class="k">def</span> <span class="nf">get_headers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span>
+    
+    <span class="k">def</span> <span class="nf">get_unit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">header</span><span class="p">)]</span>
+    
+    <span class="k">def</span> <span class="nf">get_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">[</span><span class="n">header</span><span class="p">]</span>
+    
+    <span class="k">def</span> <span class="nf">get_CSV</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">snpl</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">CSV</span><span class="p">()</span>
+        
+        <span class="n">t</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;units&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">:</span>
+            <span class="n">t</span><span class="o">.</span><span class="n">append_column</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="p">[])</span>
+        
+        <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">]</span>
+                
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">columns</span><span class="p">):</span>
+            <span class="n">t</span><span class="o">.</span><span class="n">append_row</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>        
+        
+        <span class="k">return</span> <span class="n">t</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">snpl 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../snpl.html" >snpl</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">snpl.rheo</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Shintaro Nakagawa.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.0.0.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,1040 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snpl &#8212; snpl 0.3.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinxdoc.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">snpl 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">snpl</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for snpl</h1><div class="highlight"><pre>
+<span></span><span class="c1"># coding=utf-8</span>
+<span class="sd">&quot;&quot;&quot;A thin wrapper to matplotlib.pyplot and some utility functions</span>
+
+<span class="sd">Examples:</span>
+<span class="sd">    Here are particularly useful functions. </span>
+
+<span class="sd">    Basic plotting</span>
+
+<span class="sd">    &gt;&gt;&gt; import snpl           # this will set the style</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; snpl.limx(0.0, 100.0) # unlike pyplot.xlim(), a margin will be added automatically</span>
+<span class="sd">    &gt;&gt;&gt; snpl.limy(0.0, 1.0)</span>
+<span class="sd">    &gt;&gt;&gt; snpl.labelx(&quot;$x$&quot;) # latex math style is available</span>
+<span class="sd">    &gt;&gt;&gt; snpl.labelx(&quot;$y$&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; x = np.linspace(10.0, 90.0, 100)</span>
+<span class="sd">    &gt;&gt;&gt; y = np.random.rand(100)</span>
+<span class="sd">    &gt;&gt;&gt; snpl.plot(x, y, ls=&quot;&quot;, marker=&quot;o&quot;, color=&quot;g&quot;, label=&quot;data&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; snpl.legend(fontsize=8, loc=&quot;upper right&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; snpl.savefig(&quot;test.pdf&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; snpl.delete_lines() # this erases all the lines and texts on the current Axes while keeping other things intact</span>
+
+<span class="sd">    Data cropping - ``snpl.crop()``</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; import snpl</span>
+<span class="sd">    &gt;&gt;&gt; np.random.seed(0)</span>
+<span class="sd">    &gt;&gt;&gt; x = np.linspace(0.0, 100.0, 5)</span>
+<span class="sd">    &gt;&gt;&gt; y = np.random.rand(5)</span>
+<span class="sd">    &gt;&gt;&gt; z = np.random.rand(5)</span>
+<span class="sd">    &gt;&gt;&gt; print(x, y, z)</span>
+<span class="sd">    [  0.  25.  50.  75. 100.] [0.5488135  0.71518937 0.60276338 0.54488318 0.4236548 ] [0.64589411 0.43758721 0.891773   0.96366276 0.38344152]</span>
+<span class="sd">    &gt;&gt;&gt; xc, yc, zc = snpl.crop(x, [20.0, 50.0], y, z) # x, y, z will be cropped based on the range of x (20.0 ~ 50.0)</span>
+<span class="sd">    &gt;&gt;&gt; print(xc, yc, zc)</span>
+<span class="sd">    [25. 50.] [0.71518937 0.60276338] [0.43758721 0.891773  ]    </span>
+
+<span class="sd">    Gradient color generator - ``snpl.get_colors()``</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; import snpl</span>
+<span class="sd">    &gt;&gt;&gt; x = np.linspace(0.0, 1.0, 10)</span>
+<span class="sd">    &gt;&gt;&gt; n = 10</span>
+<span class="sd">    &gt;&gt;&gt; cs = snpl.get_colors(n)</span>
+<span class="sd">    &gt;&gt;&gt; for i in range(n):</span>
+<span class="sd">    &gt;&gt;&gt;     snpl.plot(x, np.random.rand(len(x))+i, ls=&quot;-&quot;, marker=&quot;o&quot;, color=cs[i], label=str(i))</span>
+<span class="sd">    &gt;&gt;&gt; snpl.legend()</span>
+<span class="sd">    &gt;&gt;&gt; snpl.show()</span>
+
+<span class="sd">    Color manipulation - ``snpl.tint()``</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; import snpl</span>
+<span class="sd">    &gt;&gt;&gt; x = np.linspace(0.0, 1.0, 10)</span>
+<span class="sd">    &gt;&gt;&gt; c = &quot;g&quot;</span>
+<span class="sd">    &gt;&gt;&gt; snpl.plot(x, np.random.rand(len(x))+0.0, ls=&quot;-&quot;, marker=&quot;o&quot;, color=snpl.tint(c, 0.0), label=&quot;0.0&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; snpl.plot(x, np.random.rand(len(x))+1.0, ls=&quot;-&quot;, marker=&quot;o&quot;, color=snpl.tint(c, 0.2), label=&quot;0.2&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; snpl.plot(x, np.random.rand(len(x))+2.0, ls=&quot;-&quot;, marker=&quot;o&quot;, color=snpl.tint(c, 0.5), label=&quot;0.5&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; snpl.plot(x, np.random.rand(len(x))+3.0, ls=&quot;-&quot;, marker=&quot;o&quot;, color=snpl.tint(c, 0.8), label=&quot;0.8&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; snpl.legend()</span>
+<span class="sd">    &gt;&gt;&gt; snpl.show()</span>
+
+<span class="sd">    Access the ``pyplot`` instance</span>
+
+<span class="sd">    &gt;&gt;&gt; import snpl</span>
+<span class="sd">    &gt;&gt;&gt; x = [0.0, 1.0, 2.0]</span>
+<span class="sd">    &gt;&gt;&gt; y = [3.0, 4.0, 5.0]</span>
+<span class="sd">    &gt;&gt;&gt; snpl.pyplot.bar(x, y) # you have full access to pyplot functionality</span>
+<span class="sd">    &gt;&gt;&gt; snpl.show()</span>
+<span class="sd">    </span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;0.3.1&quot;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;NAKAGAWA Shintaro&quot;</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">colors</span><span class="p">,</span> <span class="n">cm</span><span class="p">,</span> <span class="n">pyplot</span><span class="p">,</span> <span class="n">ticker</span><span class="p">,</span> <span class="n">axes</span><span class="p">,</span> <span class="n">rc</span>
+<span class="kn">from</span> <span class="nn">matplotlib.backends.backend_pdf</span> <span class="kn">import</span> <span class="n">PdfPages</span>
+<span class="kn">from</span> <span class="nn">matplotlib.mathtext</span> <span class="kn">import</span> <span class="n">_mathtext</span>
+
+<span class="kn">from</span> <span class="nn">snpl</span> <span class="kn">import</span> <span class="n">afm</span><span class="p">,</span> <span class="n">bod</span><span class="p">,</span> <span class="n">fit</span><span class="p">,</span> <span class="n">gpc</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">tensile</span><span class="p">,</span> <span class="n">rheo</span><span class="p">,</span> <span class="n">util</span><span class="p">,</span> <span class="n">uvvis</span>
+
+<span class="c1">#----------------#</span>
+<span class="c1"># Runtime config #</span>
+<span class="c1">#----------------#</span>
+
+<span class="kn">import</span> <span class="nn">importlib.resources</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="n">importlib</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">path</span><span class="p">(</span><span class="s2">&quot;snpl&quot;</span><span class="p">,</span> <span class="s2">&quot;matplotlibrc_snpl&quot;</span><span class="p">))</span>
+
+
+<span class="c1"># This is to make the position of the super/subscripts more natural. </span>
+<span class="c1"># Thanks to: https://qiita.com/ogose/items/d110aa090102079fe73f</span>
+<span class="n">_mathtext</span><span class="o">.</span><span class="n">FontConstantsBase</span><span class="o">.</span><span class="n">sup1</span> <span class="o">=</span> <span class="mf">0.4</span>
+
+<span class="c1">#---------------------------------------------------#</span>
+<span class="c1"># Utility functions to change rc parameters at once #</span>
+<span class="c1">#---------------------------------------------------#</span>
+<div class="viewcode-block" id="figsize"><a class="viewcode-back" href="../snpl.html#snpl.figsize">[docs]</a><span class="k">def</span> <span class="nf">figsize</span><span class="p">(</span><span class="n">wid_in</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hei_in</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sets the figure size</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        wid_in: width in inches. If None, inherit the current value. Defaults to None. </span>
+<span class="sd">        hei_in: height in inches. If None, inherit the current value. Defaults to None. </span>
+<span class="sd">        ax: `Axes` object. The size of the figure containing this `Axes` object will be modified. </span>
+<span class="sd">            If None, the current figure in `pyplot` will be modified. Defaults to None. </span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Current figure width &amp; height in tuple (width, height). </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ax_</span> <span class="o">=</span> <span class="n">_get_proper_axis</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+    <span class="n">fig_</span> <span class="o">=</span> <span class="n">ax_</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">fig_</span><span class="o">.</span><span class="n">get_size_inches</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="n">wid_in</span><span class="p">:</span>
+        <span class="n">wid_</span> <span class="o">=</span> <span class="n">wid_in</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">wid_</span> <span class="o">=</span> <span class="n">current</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="n">hei_in</span><span class="p">:</span>
+        <span class="n">hei_</span> <span class="o">=</span> <span class="n">hei_in</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">hei_</span> <span class="o">=</span> <span class="n">current</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    
+    <span class="n">fig_</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">(</span><span class="n">wid_</span><span class="p">,</span> <span class="n">hei_</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">wid_</span><span class="p">,</span> <span class="n">hei_</span></div>
+
+<div class="viewcode-block" id="markersize"><a class="viewcode-back" href="../snpl.html#snpl.markersize">[docs]</a><span class="k">def</span> <span class="nf">markersize</span><span class="p">(</span><span class="n">ms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mew</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sets the default marker size through matplotlib.rc</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ms: Markersize in points. If None, no change will be made. </span>
+<span class="sd">            It also sets the errorbar cap size (half of the marker size)</span>
+<span class="sd">        mew: Marker edge width in points. If None, no change will be made. </span>
+<span class="sd">    </span>
+<span class="sd">    Note:</span>
+<span class="sd">        This just sets the default value. </span>
+<span class="sd">        Styles can be modified for individual plots in `snpl.plot()` etc. </span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">ms</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">rc</span><span class="p">(</span><span class="s2">&quot;lines&quot;</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="n">ms</span><span class="p">)</span>
+        <span class="n">rc</span><span class="p">(</span><span class="s2">&quot;errorbar&quot;</span><span class="p">,</span> <span class="n">capsize</span><span class="o">=</span><span class="n">ms</span><span class="o">/</span><span class="mf">2.0</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">mew</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">rc</span><span class="p">(</span><span class="s2">&quot;lines&quot;</span><span class="p">,</span> <span class="n">markeredgewidth</span><span class="o">=</span><span class="n">mew</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ticklabelpadding"><a class="viewcode-back" href="../snpl.html#snpl.ticklabelpadding">[docs]</a><span class="k">def</span> <span class="nf">ticklabelpadding</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sets the default tick label padding through matplotlib.rc</span>
+
+<span class="sd">    The tick label padding is the space between the tick </span>
+<span class="sd">    and the tick label (numbers on the axis). </span>
+<span class="sd">    This method applies for major and minor ticks on both x and y axes. </span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        val: padding in points. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rc</span><span class="p">(</span><span class="s2">&quot;xtick.major&quot;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="n">val</span><span class="p">)</span>
+    <span class="n">rc</span><span class="p">(</span><span class="s2">&quot;xtick.minor&quot;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="n">val</span><span class="p">)</span>
+    <span class="n">rc</span><span class="p">(</span><span class="s2">&quot;ytick.major&quot;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="n">val</span><span class="p">)</span>
+    <span class="n">rc</span><span class="p">(</span><span class="s2">&quot;ytick.minor&quot;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="n">val</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="linewidth"><a class="viewcode-back" href="../snpl.html#snpl.linewidth">[docs]</a><span class="k">def</span> <span class="nf">linewidth</span><span class="p">(</span><span class="n">lw</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sets the default line width through matplotlib.rc</span>
+
+<span class="sd">    Default values of </span>
+<span class="sd">    - plot line width</span>
+<span class="sd">    - axes frame line width, </span>
+<span class="sd">    - tick mark line width</span>
+<span class="sd">    - tick mark length (major ticks: lw*4, minor ticks: lw*2)</span>
+<span class="sd">    will be changed. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        lw: line width in points. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rc</span><span class="p">(</span><span class="s2">&quot;lines&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">)</span>
+    <span class="n">rc</span><span class="p">(</span><span class="s2">&quot;axes&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">)</span>
+    <span class="n">rc</span><span class="p">(</span><span class="s2">&quot;xtick.major&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">lw</span><span class="o">*</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">rc</span><span class="p">(</span><span class="s2">&quot;xtick.minor&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">lw</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">rc</span><span class="p">(</span><span class="s2">&quot;ytick.major&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">lw</span><span class="o">*</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">rc</span><span class="p">(</span><span class="s2">&quot;ytick.minor&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">lw</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span></div>
+
+<span class="c1">#-------------#</span>
+<span class="c1"># Appearances #</span>
+<span class="c1">#-------------#</span>
+<div class="viewcode-block" id="labelx"><a class="viewcode-back" href="../snpl.html#snpl.labelx">[docs]</a><span class="k">def</span> <span class="nf">labelx</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sets the label for x axis for the current axes. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ax: Axes object to which the label will be set. </span>
+<span class="sd">            If `None`, the current Axes in `pyplot`. </span>
+<span class="sd">        kwargs: Arguments to `set_xlabel()`. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ax_</span> <span class="o">=</span> <span class="n">_get_proper_axis</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">ax_</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="labely"><a class="viewcode-back" href="../snpl.html#snpl.labely">[docs]</a><span class="k">def</span> <span class="nf">labely</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sets the label for y axis for the current axes. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ax: Axes object to which the label will be set. </span>
+<span class="sd">            If `None`, the current Axes in `pyplot`. </span>
+<span class="sd">        kwargs: Arguments to `set_ylabel()`. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ax_</span> <span class="o">=</span> <span class="n">_get_proper_axis</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">ax_</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="title"><a class="viewcode-back" href="../snpl.html#snpl.title">[docs]</a><span class="k">def</span> <span class="nf">title</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sets the label for y axis for the current axes. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ax: Axes object to which the label will be set. </span>
+<span class="sd">            If `None`, the current Axes in `pyplot`. </span>
+<span class="sd">        kwargs: Arguments to `set_title()`. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ax_</span> <span class="o">=</span> <span class="n">_get_proper_axis</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">ax_</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="formatx"><a class="viewcode-back" href="../snpl.html#snpl.formatx">[docs]</a><span class="k">def</span> <span class="nf">formatx</span><span class="p">(</span><span class="n">empty</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">scientific</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Modifies the axis tick label formatting for x axis. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        empty: If `True`, no tick labels. </span>
+<span class="sd">        scientific: If `False`, turn off the scientific notation</span>
+<span class="sd">            (e.g. 10^3)</span>
+<span class="sd">        ax: Axes object to which the label will be set. </span>
+<span class="sd">            If `None`, the current Axes in `pyplot`. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ax_</span> <span class="o">=</span> <span class="n">_get_proper_axis</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">empty</span><span class="p">:</span>
+        <span class="n">ax_</span><span class="o">.</span><span class="n">get_xaxis</span><span class="p">()</span><span class="o">.</span><span class="n">set_ticklabels</span><span class="p">([])</span>
+    <span class="k">elif</span> <span class="n">scientific</span><span class="p">:</span>
+        <span class="n">ax_</span><span class="o">.</span><span class="n">ticklabel_format</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;scientific&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax_</span><span class="o">.</span><span class="n">ticklabel_format</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;plain&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="formaty"><a class="viewcode-back" href="../snpl.html#snpl.formaty">[docs]</a><span class="k">def</span> <span class="nf">formaty</span><span class="p">(</span><span class="n">empty</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">scientific</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Modifies the axis tick label formatting for y axis. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        empty: If `True`, no tick labels. </span>
+<span class="sd">        scientific: If `False`, turn off the scientific notation</span>
+<span class="sd">            (e.g. 10^3)</span>
+<span class="sd">        ax: Axes object to which the label will be set. </span>
+<span class="sd">            If `None`, the current Axes in `pyplot`. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ax_</span> <span class="o">=</span> <span class="n">_get_proper_axis</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">empty</span><span class="p">:</span>
+        <span class="n">ax_</span><span class="o">.</span><span class="n">get_yaxis</span><span class="p">()</span><span class="o">.</span><span class="n">set_ticklabels</span><span class="p">([])</span>
+    <span class="k">elif</span> <span class="n">scientific</span><span class="p">:</span>
+        <span class="n">ax_</span><span class="o">.</span><span class="n">ticklabel_format</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;scientific&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax_</span><span class="o">.</span><span class="n">ticklabel_format</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;plain&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="remove_borders"><a class="viewcode-back" href="../snpl.html#snpl.remove_borders">[docs]</a><span class="k">def</span> <span class="nf">remove_borders</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Removes axes frame on the specified sides. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        args: One or more strings from (&quot;top&quot;, &quot;left&quot;, &quot;right&quot;, &quot;bottom&quot;)</span>
+<span class="sd">            that specifies the border(s) to be removed. </span>
+<span class="sd">        ax: Axes object to which the function operates. If `None`, the current Axes in `pyplot`. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ax_</span> <span class="o">=</span> <span class="n">_get_proper_axis</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+    <span class="n">sides</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;top&quot;</span><span class="p">,</span> <span class="s2">&quot;left&quot;</span><span class="p">,</span> <span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="s2">&quot;bottom&quot;</span><span class="p">)</span>
+    
+    <span class="n">sides_remove</span> <span class="o">=</span> <span class="p">[]</span>    
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sides</span><span class="p">:</span>
+            <span class="n">sides_remove</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Unrecognized side ignored: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+    
+    <span class="n">sides_remain</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sides</span> <span class="k">if</span> <span class="n">s</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sides_remove</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">sides_remove</span><span class="p">:</span>
+        <span class="k">return</span>
+    
+    <span class="p">[</span><span class="n">ax_</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="n">s</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sides_remove</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="s2">&quot;top&quot;</span> <span class="ow">in</span> <span class="n">sides_remain</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="s2">&quot;bottom&quot;</span> <span class="ow">in</span> <span class="n">sides_remain</span><span class="p">):</span>
+        <span class="n">ax_</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_ticks_position</span><span class="p">(</span><span class="s2">&quot;both&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="s2">&quot;top&quot;</span> <span class="ow">in</span> <span class="n">sides_remain</span><span class="p">):</span>
+        <span class="n">ax_</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_ticks_position</span><span class="p">(</span><span class="s2">&quot;top&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="s2">&quot;bottom&quot;</span> <span class="ow">in</span> <span class="n">sides_remain</span><span class="p">):</span>
+        <span class="n">ax_</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_ticks_position</span><span class="p">(</span><span class="s2">&quot;bottom&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax_</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_ticks_position</span><span class="p">(</span><span class="s2">&quot;none&quot;</span><span class="p">)</span>
+        <span class="n">ax_</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
+
+        
+    <span class="k">if</span> <span class="p">(</span><span class="s2">&quot;left&quot;</span> <span class="ow">in</span> <span class="n">sides_remain</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="s2">&quot;right&quot;</span> <span class="ow">in</span> <span class="n">sides_remain</span><span class="p">):</span>
+        <span class="n">ax_</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_ticks_position</span><span class="p">(</span><span class="s2">&quot;both&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="s2">&quot;left&quot;</span> <span class="ow">in</span> <span class="n">sides_remain</span><span class="p">):</span>
+        <span class="n">ax_</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_ticks_position</span><span class="p">(</span><span class="s2">&quot;left&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="s2">&quot;right&quot;</span> <span class="ow">in</span> <span class="n">sides_remain</span><span class="p">):</span>
+        <span class="n">ax_</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_ticks_position</span><span class="p">(</span><span class="s2">&quot;right&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax_</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_ticks_position</span><span class="p">(</span><span class="s2">&quot;none&quot;</span><span class="p">)</span>
+        <span class="n">ax_</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span></div>
+        
+<span class="c1">#--------------------#</span>
+<span class="c1"># xy scales &amp; limits #</span>
+<span class="c1">#--------------------#</span>
+<div class="viewcode-block" id="limx"><a class="viewcode-back" href="../snpl.html#snpl.limx">[docs]</a><span class="k">def</span> <span class="nf">limx</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">expandratio</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sets left and right limits of the x axis. </span>
+
+<span class="sd">    If either of two limits is not given, return currently-set limits instead. </span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        left: left limit. </span>
+<span class="sd">        right: right limit. </span>
+<span class="sd">        ax: Axes object to which the function operates. If `None`, the current Axes in `pyplot`. </span>
+<span class="sd">        expandratio: expansion ratio. 0.0 for no expansion. </span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        current limits in two-tuple. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">ax_</span> <span class="o">=</span> <span class="n">_get_proper_axis</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+        
+    <span class="k">if</span> <span class="n">left</span><span class="o">==</span><span class="kc">None</span> <span class="ow">or</span> <span class="n">right</span><span class="o">==</span><span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ax_</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax_</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span>
+    
+        <span class="k">if</span> <span class="n">expandratio</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">expandx</span><span class="p">(</span><span class="n">expandratio</span><span class="p">,</span> <span class="n">ax_</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ax_</span><span class="o">.</span><span class="n">get_xscale</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;log&quot;</span><span class="p">:</span>
+            <span class="n">ticxlog</span><span class="p">(</span><span class="n">numticks</span><span class="o">=</span><span class="s2">&quot;every&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax_</span><span class="p">)</span>
+            <span class="k">pass</span>
+            
+        <span class="k">return</span> <span class="n">ax_</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="limy"><a class="viewcode-back" href="../snpl.html#snpl.limy">[docs]</a><span class="k">def</span> <span class="nf">limy</span><span class="p">(</span><span class="n">lower</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">upper</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">expandratio</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sets lower and upper limits of the x axis. </span>
+
+<span class="sd">    If either of two limits is not given, return currently-set limits instead. </span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        lower: lower limit. </span>
+<span class="sd">        upper: upper limit. </span>
+<span class="sd">        ax: Axes object to which the function operates. If `None`, the current Axes in `pyplot`. </span>
+<span class="sd">        expandratio: expansion ratio. 0.0 for no expansion. </span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        current limits in two-tuple. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ax_</span> <span class="o">=</span> <span class="n">_get_proper_axis</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">lower</span><span class="o">==</span><span class="kc">None</span> <span class="ow">or</span> <span class="n">upper</span><span class="o">==</span><span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ax_</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax_</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">)</span>
+    
+        <span class="k">if</span> <span class="n">expandratio</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">expandy</span><span class="p">(</span><span class="n">expandratio</span><span class="p">,</span> <span class="n">ax_</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ax_</span><span class="o">.</span><span class="n">get_yscale</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;log&quot;</span><span class="p">:</span>
+            <span class="n">ticylog</span><span class="p">(</span><span class="n">numticks</span><span class="o">=</span><span class="s2">&quot;every&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax_</span><span class="p">)</span>
+            <span class="k">pass</span>
+        
+        <span class="k">return</span> <span class="n">ax_</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="expandx"><a class="viewcode-back" href="../snpl.html#snpl.expandx">[docs]</a><span class="k">def</span> <span class="nf">expandx</span><span class="p">(</span><span class="n">ratio</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Expands the xlim based on the canvas size. </span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        ratio: Expand ratio. 0.0 for no expansion. </span>
+<span class="sd">        ax: Axes object to which the function operates. If `None`, the current Axes in `pyplot`. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ax_</span> <span class="o">=</span> <span class="n">_get_proper_axis</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+    
+    <span class="n">xl</span> <span class="o">=</span> <span class="n">ax_</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">ax_</span><span class="o">.</span><span class="n">get_xscale</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;log&quot;</span><span class="p">:</span>
+        <span class="n">xw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">xl</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">xl</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">xw</span> <span class="o">=</span> <span class="n">xl</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">xl</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="c1"># width, height = ax_.get_figure().get_size_inches()</span>
+    <span class="n">bbox</span> <span class="o">=</span> <span class="n">ax_</span><span class="o">.</span><span class="n">get_window_extent</span><span class="p">()</span><span class="o">.</span><span class="n">transformed</span><span class="p">(</span><span class="n">ax_</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">dpi_scale_trans</span><span class="o">.</span><span class="n">inverted</span><span class="p">())</span>
+    <span class="n">width</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">bbox</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">bbox</span><span class="o">.</span><span class="n">height</span>
+    <span class="n">asp</span> <span class="o">=</span> <span class="n">height</span><span class="o">/</span><span class="n">width</span>
+    
+    
+    <span class="k">if</span> <span class="n">ax_</span><span class="o">.</span><span class="n">get_xscale</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;log&quot;</span><span class="p">:</span>
+        <span class="n">ax_</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">xl</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">xw</span><span class="o">*</span><span class="n">ratio</span><span class="p">),</span> <span class="n">xl</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">xw</span><span class="o">*</span><span class="n">ratio</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax_</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">xl</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">xw</span><span class="o">*</span><span class="n">ratio</span><span class="p">,</span> <span class="n">xl</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">xw</span><span class="o">*</span><span class="n">ratio</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="expandy"><a class="viewcode-back" href="../snpl.html#snpl.expandy">[docs]</a><span class="k">def</span> <span class="nf">expandy</span><span class="p">(</span><span class="n">ratio</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Expands the ylim based on the canvas size. </span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        ratio: Expand ratio. 0.0 for no expansion. </span>
+<span class="sd">        ax: Axes object to which the function operates. If `None`, the current Axes in `pyplot`. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ax_</span> <span class="o">=</span> <span class="n">_get_proper_axis</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+        
+    <span class="n">yl</span> <span class="o">=</span> <span class="n">ax_</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">ax_</span><span class="o">.</span><span class="n">get_yscale</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;log&quot;</span><span class="p">:</span>
+        <span class="n">yw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">yl</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">yl</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">yw</span> <span class="o">=</span> <span class="n">yl</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">yl</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="c1"># width, height = ax_.get_figure().get_size_inches()</span>
+    <span class="n">bbox</span> <span class="o">=</span> <span class="n">ax_</span><span class="o">.</span><span class="n">get_window_extent</span><span class="p">()</span><span class="o">.</span><span class="n">transformed</span><span class="p">(</span><span class="n">ax_</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">dpi_scale_trans</span><span class="o">.</span><span class="n">inverted</span><span class="p">())</span>
+    <span class="n">width</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">bbox</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">bbox</span><span class="o">.</span><span class="n">height</span>
+    <span class="n">asp</span> <span class="o">=</span> <span class="n">height</span><span class="o">/</span><span class="n">width</span>
+    
+    <span class="k">if</span> <span class="n">ax_</span><span class="o">.</span><span class="n">get_yscale</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;log&quot;</span><span class="p">:</span>
+        <span class="n">ax_</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">yl</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">yw</span><span class="o">*</span><span class="n">ratio</span><span class="o">/</span><span class="n">asp</span><span class="p">),</span> <span class="n">yl</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">yw</span><span class="o">*</span><span class="n">ratio</span><span class="o">/</span><span class="n">asp</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax_</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">yl</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">yw</span><span class="o">*</span><span class="n">ratio</span><span class="o">/</span><span class="n">asp</span><span class="p">,</span> <span class="n">yl</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">yw</span><span class="o">*</span><span class="n">ratio</span><span class="o">/</span><span class="n">asp</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="log"><a class="viewcode-back" href="../snpl.html#snpl.log">[docs]</a><span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;xy&quot;</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sets/unsets log scale to x and/or y axes. </span>
+
+<span class="sd">    This also sets the ticks nicely. </span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        axis: Axis (x and/or y) to be modified. &quot;x&quot;, &quot;y&quot;, or &quot;xy&quot;. </span>
+<span class="sd">        b: If `True`, the `axis` is changed to log scale. </span>
+<span class="sd">            If `False`, the `axis` is changed to linear scale. </span>
+<span class="sd">        ax: Axes object to which the function operates. If `None`, the current Axes in `pyplot`. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ax_</span> <span class="o">=</span> <span class="n">_get_proper_axis</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">axis</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;xy&quot;</span><span class="p">,</span> <span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;XY&quot;</span><span class="p">,</span> <span class="s2">&quot;Both&quot;</span><span class="p">,</span> <span class="s2">&quot;All&quot;</span><span class="p">):</span>
+        <span class="n">_logx</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">ax_</span><span class="p">)</span>
+        <span class="n">_logy</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">ax_</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">axis</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;X&quot;</span><span class="p">):</span>
+        <span class="n">_logx</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">ax_</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">axis</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;Y&quot;</span><span class="p">):</span>
+        <span class="n">_logy</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">ax_</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;No such axis: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axis</span><span class="p">))</span></div>
+
+<span class="k">def</span> <span class="nf">_logx</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">numticks</span><span class="o">=</span><span class="s2">&quot;every&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Internal function to properly set the log scale. </span>
+
+<span class="sd">    This is needed to draw nice ticks. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        b: If `True`, set x axis to logscale. Otherwise, revert to linear scale. </span>
+<span class="sd">        ax: Axes object to which the scale will be set. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">b</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">):</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mf">1e-1</span><span class="p">,</span> <span class="mf">1e1</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+        <span class="n">ticxlog</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">numticks</span><span class="o">=</span><span class="n">numticks</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xscale</span><span class="p">(</span><span class="s2">&quot;linear&quot;</span><span class="p">)</span>
+        <span class="n">ticx</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">_logy</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">numticks</span><span class="o">=</span><span class="s2">&quot;every&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Internal function to properly set the log scale. </span>
+
+<span class="sd">    This is needed to draw nice ticks. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        b: If `True`, set y axis to logscale. Otherwise, revert to linear scale. </span>
+<span class="sd">        ax: Axes object to which the scale will be set. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">b</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">):</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mf">1e-1</span><span class="p">,</span> <span class="mf">1e1</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+        <span class="n">ticylog</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">numticks</span><span class="o">=</span><span class="n">numticks</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s2">&quot;linear&quot;</span><span class="p">)</span>
+        <span class="n">ticy</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ticx"><a class="viewcode-back" href="../snpl.html#snpl.ticx">[docs]</a><span class="k">def</span> <span class="nf">ticx</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="n">minor</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sets the ticks nicely on linear-scaled x axis. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        step: Tick spacing value. If &quot;auto&quot;, automatic.</span>
+<span class="sd">        minor: If `False`, set the major ticks. If `True`, set the minor ticks. </span>
+<span class="sd">            Defaults to `False` (major ticks). </span>
+<span class="sd">        ax: Axes object to which the function operates. If `None`, the current Axes in `pyplot`. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ax_</span> <span class="o">=</span> <span class="n">_get_proper_axis</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+        
+    <span class="n">sc</span> <span class="o">=</span> <span class="n">ax_</span><span class="o">.</span><span class="n">get_xscale</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">sc</span> <span class="o">==</span> <span class="s2">&quot;linear&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">step</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span><span class="p">:</span>
+            <span class="n">loc</span> <span class="o">=</span> <span class="n">ticker</span><span class="o">.</span><span class="n">AutoLocator</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">loc</span> <span class="o">=</span> <span class="n">ticker</span><span class="o">.</span><span class="n">MultipleLocator</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">minor</span><span class="p">:</span>
+            <span class="n">ax_</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_minor_locator</span><span class="p">(</span><span class="n">loc</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax_</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span class="n">loc</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">sc</span> <span class="o">==</span> <span class="s2">&quot;log&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;ticxlog() when using log scale!&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ticy"><a class="viewcode-back" href="../snpl.html#snpl.ticy">[docs]</a><span class="k">def</span> <span class="nf">ticy</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="n">minor</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sets the ticks nicely on linear-scaled y axis. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        step: Tick spacing value. If &quot;auto&quot;, automatic.</span>
+<span class="sd">        minor: If `False`, set the major ticks. If `True`, set the minor ticks. </span>
+<span class="sd">            Defaults to `False` (major ticks). </span>
+<span class="sd">        ax: Axes object to which the function operates. If `None`, the current Axes in `pyplot`. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ax_</span> <span class="o">=</span> <span class="n">_get_proper_axis</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+    
+    <span class="n">sc</span> <span class="o">=</span> <span class="n">ax_</span><span class="o">.</span><span class="n">get_yscale</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">sc</span> <span class="o">==</span> <span class="s2">&quot;linear&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">step</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span><span class="p">:</span>
+            <span class="n">loc</span> <span class="o">=</span> <span class="n">ticker</span><span class="o">.</span><span class="n">AutoLocator</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">loc</span> <span class="o">=</span> <span class="n">ticker</span><span class="o">.</span><span class="n">MultipleLocator</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">minor</span><span class="p">:</span>
+            <span class="n">ax_</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_minor_locator</span><span class="p">(</span><span class="n">loc</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax_</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span class="n">loc</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">sc</span> <span class="o">==</span> <span class="s2">&quot;log&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Use ticylog() when using log scale!&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ticxlog"><a class="viewcode-back" href="../snpl.html#snpl.ticxlog">[docs]</a><span class="k">def</span> <span class="nf">ticxlog</span><span class="p">(</span><span class="n">numticks</span><span class="o">=</span><span class="s2">&quot;every&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sets the ticks nicely on log-scaled x axis. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        numticks: If an `int` value, sets the number of ticks to that value (as much as possible). </span>
+<span class="sd">            If &quot;every&quot;, the major ticks will be placed every decade. Defaults to &quot;every&quot;. </span>
+<span class="sd">        ax: Axes object to which the function operates. If `None`, the current Axes in `pyplot`. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ax_</span> <span class="o">=</span> <span class="n">_get_proper_axis</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+    <span class="n">sc</span> <span class="o">=</span> <span class="n">ax_</span><span class="o">.</span><span class="n">get_xscale</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">sc</span> <span class="o">==</span> <span class="s2">&quot;log&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">numticks</span> <span class="o">==</span> <span class="s2">&quot;every&quot;</span><span class="p">:</span>
+            <span class="n">lower</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">ax_</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="n">upper</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">ax_</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()[</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="n">num</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">upper</span> <span class="o">-</span> <span class="n">lower</span><span class="p">))</span>
+            <span class="n">major_loc</span> <span class="o">=</span> <span class="n">ticker</span><span class="o">.</span><span class="n">LogLocator</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">numticks</span><span class="o">=</span><span class="n">num</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">minor_loc</span> <span class="o">=</span> <span class="n">ticker</span><span class="o">.</span><span class="n">LogLocator</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">subs</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">numticks</span><span class="o">=</span><span class="n">num</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">major_loc</span> <span class="o">=</span> <span class="n">ticker</span><span class="o">.</span><span class="n">LogLocator</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">numticks</span><span class="o">=</span><span class="n">numticks</span><span class="p">)</span>
+            <span class="n">minor_loc</span> <span class="o">=</span> <span class="n">ticker</span><span class="o">.</span><span class="n">LogLocator</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">subs</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">numticks</span><span class="o">=</span><span class="n">numticks</span><span class="p">)</span>
+            
+        <span class="n">ax_</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span class="n">major_loc</span><span class="p">)</span>
+        <span class="n">ax_</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_minor_locator</span><span class="p">(</span><span class="n">minor_loc</span><span class="p">)</span>
+        <span class="n">ax_</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_minor_formatter</span><span class="p">(</span><span class="n">ticker</span><span class="o">.</span><span class="n">NullFormatter</span><span class="p">())</span>
+        <span class="c1"># lim = ax_.get_xlim()</span>
+        <span class="c1"># tics, mtics = _calc_log_tics(10.0, lim)</span>
+        <span class="c1"># ax_.xaxis.set_ticks(tics)</span>
+        <span class="c1"># ax_.xaxis.set_ticks(mtics, minor=True)</span>
+        <span class="c1"># ax_.set_xlim(*lim)</span>
+    <span class="k">elif</span> <span class="n">sc</span> <span class="o">==</span> <span class="s2">&quot;linear&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Use ticx() when using linear scale!&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ticylog"><a class="viewcode-back" href="../snpl.html#snpl.ticylog">[docs]</a><span class="k">def</span> <span class="nf">ticylog</span><span class="p">(</span><span class="n">numticks</span><span class="o">=</span><span class="s2">&quot;every&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sets the ticks nicely on log-scaled y axis. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        numticks: If an `int` value, sets the number of ticks to that value (as much as possible). </span>
+<span class="sd">            If &quot;every&quot;, the major ticks will be placed every decade. Defaults to &quot;every&quot;. </span>
+<span class="sd">        ax: Axes object to which the function operates. If `None`, the current Axes in `pyplot`. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ax_</span> <span class="o">=</span> <span class="n">_get_proper_axis</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+    <span class="n">sc</span> <span class="o">=</span> <span class="n">ax_</span><span class="o">.</span><span class="n">get_yscale</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">sc</span> <span class="o">==</span> <span class="s2">&quot;log&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">numticks</span> <span class="o">==</span> <span class="s2">&quot;every&quot;</span><span class="p">:</span>
+            <span class="n">lower</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">ax_</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="n">upper</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">ax_</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()[</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="n">num</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">upper</span> <span class="o">-</span> <span class="n">lower</span><span class="p">))</span>
+            <span class="n">major_loc</span> <span class="o">=</span> <span class="n">ticker</span><span class="o">.</span><span class="n">LogLocator</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">numticks</span><span class="o">=</span><span class="n">num</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">minor_loc</span> <span class="o">=</span> <span class="n">ticker</span><span class="o">.</span><span class="n">LogLocator</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">subs</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">numticks</span><span class="o">=</span><span class="n">num</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">major_loc</span> <span class="o">=</span> <span class="n">ticker</span><span class="o">.</span><span class="n">LogLocator</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">numticks</span><span class="o">=</span><span class="n">numticks</span><span class="p">)</span>
+            <span class="n">minor_loc</span> <span class="o">=</span> <span class="n">ticker</span><span class="o">.</span><span class="n">LogLocator</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">subs</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">numticks</span><span class="o">=</span><span class="n">numticks</span><span class="p">)</span>
+
+        <span class="n">ax_</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span class="n">major_loc</span><span class="p">)</span>
+        <span class="n">ax_</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_minor_locator</span><span class="p">(</span><span class="n">minor_loc</span><span class="p">)</span>
+        <span class="n">ax_</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_minor_formatter</span><span class="p">(</span><span class="n">ticker</span><span class="o">.</span><span class="n">NullFormatter</span><span class="p">())</span>
+        <span class="c1"># lim = ax_.get_ylim()</span>
+        <span class="c1"># tics, mtics = _calc_log_tics(10.0, lim)</span>
+        <span class="c1"># ax_.yaxis.set_ticks(tics)</span>
+        <span class="c1"># ax_.yaxis.set_ticks(mtics, minor=True)</span>
+        <span class="c1"># ax_.set_ylim(*lim)</span>
+    <span class="k">elif</span> <span class="n">sc</span> <span class="o">==</span> <span class="s2">&quot;linear&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Use ticy() when using linear scale!&quot;</span><span class="p">)</span></div>
+        
+<span class="c1">#-------------------#</span>
+<span class="c1"># Get axes &amp; figure #</span>
+<span class="c1">#-------------------#</span>
+<div class="viewcode-block" id="gca"><a class="viewcode-back" href="../snpl.html#snpl.gca">[docs]</a><span class="k">def</span> <span class="nf">gca</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Gets the current `Axes` object. </span>
+
+<span class="sd">    Shortcut for `pyplot.gca()`. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">axes</span><span class="o">.</span><span class="n">Axes</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ax</span></div>
+
+<div class="viewcode-block" id="clf"><a class="viewcode-back" href="../snpl.html#snpl.clf">[docs]</a><span class="k">def</span> <span class="nf">clf</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Clears the current `Figure`. </span>
+
+<span class="sd">    Shortcut for `pyplot.clf()`. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pyplot</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="cla"><a class="viewcode-back" href="../snpl.html#snpl.cla">[docs]</a><span class="k">def</span> <span class="nf">cla</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Clears the current `Axes`. </span>
+
+<span class="sd">    Shortcut for `pyplot.cla()`. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pyplot</span><span class="o">.</span><span class="n">cla</span><span class="p">()</span></div>
+
+<span class="c1">#----------#</span>
+<span class="c1"># Plotting #</span>
+<span class="c1">#----------#</span>
+<div class="viewcode-block" id="plot"><a class="viewcode-back" href="../snpl.html#snpl.plot">[docs]</a><span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Shortcut for `pyplot.plot()`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="errorbar"><a class="viewcode-back" href="../snpl.html#snpl.errorbar">[docs]</a><span class="k">def</span> <span class="nf">errorbar</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Shortcut for `pyplot.errorbar()`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<span class="c1">#--------#</span>
+<span class="c1"># Legend #</span>
+<span class="c1">#--------#</span>
+<div class="viewcode-block" id="legend"><a class="viewcode-back" href="../snpl.html#snpl.legend">[docs]</a><span class="k">def</span> <span class="nf">legend</span><span class="p">(</span><span class="o">*</span><span class="n">axes_objects</span><span class="p">,</span> <span class="o">**</span><span class="n">legendprops</span><span class="p">):</span>
+
+    <span class="n">liness</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">labelss</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">axes_objects</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="n">axes_objects</span><span class="p">:</span>
+            <span class="n">lines</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_legend_handles_labels</span><span class="p">()</span>
+            <span class="n">liness</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+            <span class="n">labelss</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+        <span class="c1"># get axis border width </span>
+        <span class="n">borderwidth</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">get_linewidth</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">axes_objects</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">spines</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">lines</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">get_legend_handles_labels</span><span class="p">()</span>
+        <span class="n">liness</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+        <span class="n">labelss</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>        
+        <span class="c1"># get axis border width </span>
+        <span class="n">borderwidth</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">get_linewidth</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">spines</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">rev</span> <span class="o">=</span> <span class="n">legendprops</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;reverse&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">rev</span> <span class="o">=</span> <span class="kc">False</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">align</span> <span class="o">=</span> <span class="n">legendprops</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;align&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">align</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        
+    <span class="k">if</span> <span class="n">rev</span><span class="p">:</span>
+        <span class="n">liness</span> <span class="o">=</span> <span class="n">liness</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">labelss</span> <span class="o">=</span> <span class="n">labelss</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    
+    <span class="n">leg</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">liness</span><span class="p">,</span> <span class="n">labelss</span><span class="p">,</span> <span class="o">**</span><span class="n">legendprops</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">align</span><span class="p">:</span>
+        <span class="n">vp</span> <span class="o">=</span> <span class="n">leg</span><span class="o">.</span><span class="n">_legend_box</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> 
+        <span class="k">if</span> <span class="n">align</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;right&quot;</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">vp</span><span class="o">.</span><span class="n">_children</span><span class="p">:</span> 
+                <span class="n">c</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span> 
+            <span class="n">vp</span><span class="o">.</span><span class="n">align</span><span class="o">=</span><span class="s2">&quot;right&quot;</span>
+        <span class="k">elif</span> <span class="n">align</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;l&quot;</span><span class="p">,</span> <span class="s2">&quot;left&quot;</span><span class="p">):</span>
+            <span class="n">vp</span><span class="o">.</span><span class="n">align</span><span class="o">=</span><span class="s2">&quot;left&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+    
+    <span class="n">leg</span><span class="o">.</span><span class="n">get_frame</span><span class="p">()</span><span class="o">.</span><span class="n">set_linewidth</span><span class="p">(</span><span class="n">borderwidth</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">leg</span></div>
+
+<span class="c1">#------------------#</span>
+<span class="c1"># Other appearance #</span>
+<span class="c1">#------------------#</span>
+
+<span class="c1">#-----------#</span>
+<span class="c1"># Save/show #</span>
+<span class="c1">#-----------#</span>
+<div class="viewcode-block" id="savefig"><a class="viewcode-back" href="../snpl.html#snpl.savefig">[docs]</a><span class="k">def</span> <span class="nf">savefig</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>    
+    <span class="k">return</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="show"><a class="viewcode-back" href="../snpl.html#snpl.show">[docs]</a><span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<span class="c1">#----------#</span>
+<span class="c1"># Cleaning #</span>
+<span class="c1">#----------#</span>
+<div class="viewcode-block" id="delete_lines"><a class="viewcode-back" href="../snpl.html#snpl.delete_lines">[docs]</a><span class="k">def</span> <span class="nf">delete_lines</span><span class="p">(</span><span class="o">*</span><span class="n">axes_objects</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">axes_objects</span><span class="p">:</span>
+        <span class="n">axes_</span> <span class="o">=</span> <span class="n">axes_objects</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">axes_</span> <span class="o">=</span> <span class="p">[</span><span class="n">pyplot</span><span class="o">.</span><span class="n">gca</span><span class="p">()]</span>
+        
+    <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="n">axes_</span><span class="p">:</span>
+        <span class="p">[</span><span class="n">l</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">lines</span><span class="p">)]</span>
+        <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">collections</span><span class="p">)]</span>
+        <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">texts</span><span class="p">)]</span>
+        <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">patches</span><span class="p">)]</span>
+                
+        <span class="k">if</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_legend</span><span class="p">():</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">get_legend</span><span class="p">()</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span></div>
+        
+        <span class="c1"># ax.lines = []</span>
+        <span class="c1"># ax.collections = []</span>
+        <span class="c1"># ax.texts = []</span>
+        <span class="c1"># ax.containers = []</span>
+        <span class="c1"># ax.patches = []</span>
+
+<span class="c1">#---------#</span>
+<span class="c1"># utility #</span>
+<span class="c1">#---------#</span>
+<div class="viewcode-block" id="get_colors"><a class="viewcode-back" href="../snpl.html#snpl.get_colors">[docs]</a><span class="k">def</span> <span class="nf">get_colors</span><span class="p">(</span><span class="n">num</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;inferno&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Make a color series from a colormap. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        num: Number of colors to generate. </span>
+<span class="sd">        name: Color map name registered in `matplotlib`. </span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A list of (r,g,b,a) arrays. </span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; cs = snpl.get_colors(5)</span>
+<span class="sd">        &gt;&gt;&gt; x = np.array([0.0, 1.0])</span>
+<span class="sd">        &gt;&gt;&gt; y = np.array([1.0, 1.0])</span>
+<span class="sd">        &gt;&gt;&gt; for i, c in enumerate(cs):</span>
+<span class="sd">        &gt;&gt;&gt;     snpl.plot(x, y + i, color=c, marker=&quot;&quot;, ls=&quot;-&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; snpl.show()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">num</span><span class="p">)</span>
+    <span class="n">norm</span> <span class="o">=</span> <span class="n">colors</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">arr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">cmap</span> <span class="o">=</span> <span class="n">cm</span><span class="o">.</span><span class="n">ScalarMappable</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">cmap</span><span class="o">.</span><span class="n">to_rgba</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">arr</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="get_markers"><a class="viewcode-back" href="../snpl.html#snpl.get_markers">[docs]</a><span class="k">def</span> <span class="nf">get_markers</span><span class="p">(</span><span class="n">num</span><span class="p">,</span> <span class="n">symbols</span><span class="o">=</span><span class="s2">&quot;osD^&gt;v&lt;XP&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Make a marker style series. </span>
+
+<span class="sd">    This function makes a list of marker style characters of a given length. </span>
+<span class="sd">    The marker styles are cyclic. </span>
+<span class="sd">    For example, with the default `symbols`, </span>
+<span class="sd">    &gt;&gt;&gt; print(snpl.get_markers(11))</span>
+<span class="sd">    &gt;&gt;&gt; [&quot;o&quot;, &quot;s&quot;, &quot;D&quot;, &quot;^&quot;, &quot;&gt;&quot;, &quot;v&quot;, &quot;&lt;&quot;, &quot;X&quot;, &quot;P&quot;, &quot;o&quot;, &quot;s&quot;]</span>
+<span class="sd">    Note that the pattern repeats after 10th item. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        num: Number of marker styles to generate. </span>
+<span class="sd">        symbols: Repeat pattern of the symbols. </span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A list of strings. </span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; cs = snpl.get_markers(5)</span>
+<span class="sd">        &gt;&gt;&gt; x = np.array([0.0, 1.0])</span>
+<span class="sd">        &gt;&gt;&gt; y = np.array([1.0, 1.0])</span>
+<span class="sd">        &gt;&gt;&gt; for i, m in enumerate(ms):</span>
+<span class="sd">        &gt;&gt;&gt;     snpl.plot(x, y + i, marker=m)</span>
+<span class="sd">        &gt;&gt;&gt; snpl.show()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">syms</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">symbols</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">syms</span><span class="p">[</span><span class="n">j</span><span class="o">%</span><span class="nb">len</span><span class="p">(</span><span class="n">syms</span><span class="p">)]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num</span><span class="p">)]</span></div>
+
+<span class="k">def</span> <span class="nf">_get_linestyles</span><span class="p">(</span><span class="n">num</span><span class="p">,</span> <span class="n">styles</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="s2">&quot;-.&quot;</span><span class="p">]):</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">styles</span><span class="p">[</span><span class="n">j</span><span class="o">%</span><span class="nb">len</span><span class="p">(</span><span class="n">styles</span><span class="p">)]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num</span><span class="p">)]</span>
+
+<div class="viewcode-block" id="tint"><a class="viewcode-back" href="../snpl.html#snpl.tint">[docs]</a><span class="k">def</span> <span class="nf">tint</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Tint the given color. </span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        c: The color to be tinted. </span>
+<span class="sd">            Can be any color-like object that `matplotlib` accepts. </span>
+<span class="sd">        f: Tinting degree. 0.0 = original color, 1.0 = white. </span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (r,g,b) tuple. </span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; snpl.plot([0], [0], marker=&quot;o&quot;, color=snpl.tint(&quot;b&quot;, 0.0)) # blue</span>
+<span class="sd">        &gt;&gt;&gt; snpl.plot([1], [1], marker=&quot;o&quot;, color=snpl.tint(&quot;b&quot;, 0.3)) # thin blue</span>
+<span class="sd">        &gt;&gt;&gt; snpl.plot([2], [2], marker=&quot;o&quot;, color=snpl.tint(&quot;b&quot;, 0.6)) # very thin blue</span>
+<span class="sd">        &gt;&gt;&gt; snpl.show()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rgb</span> <span class="o">=</span> <span class="n">colors</span><span class="o">.</span><span class="n">to_rgb</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">v</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">v</span><span class="p">)</span><span class="o">*</span><span class="n">f</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">rgb</span><span class="p">])</span></div>
+
+<span class="k">def</span> <span class="nf">_get_proper_axis</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Internal function to get a proper `Axes` object. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ax: If `None`, returns the current active `Axes` in `pyplot`. </span>
+<span class="sd">            If `Axes` object, returns that object as-is. </span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        `Axes` object. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">ax</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ax</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">_isnan_multiple</span><span class="p">(</span><span class="o">*</span><span class="n">arrays</span><span class="p">):</span>
+    <span class="n">truth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">arrays</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arrays</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">arr</span> <span class="ow">in</span> <span class="n">arrays</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="n">truth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">truth</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">arr</span><span class="p">))</span>
+    
+    <span class="k">return</span> <span class="n">truth</span>
+
+<span class="k">def</span> <span class="nf">_isinf_multiple</span><span class="p">(</span><span class="o">*</span><span class="n">arrays</span><span class="p">):</span>
+    <span class="n">truth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">arrays</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arrays</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">arr</span> <span class="ow">in</span> <span class="n">arrays</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="n">truth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">truth</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">arr</span><span class="p">))</span>
+    
+    <span class="k">return</span> <span class="n">truth</span>
+
+<span class="k">def</span> <span class="nf">_cropper</span><span class="p">(</span><span class="n">xarr</span><span class="p">,</span> <span class="n">rangex</span><span class="p">,</span> <span class="o">*</span><span class="n">arrays</span><span class="p">,</span> <span class="n">remove_nans</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">remove_infs</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    
+    <span class="n">truth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">rangex</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">xarr</span><span class="p">,</span> <span class="n">xarr</span> <span class="o">&lt;=</span> <span class="nb">max</span><span class="p">(</span><span class="n">rangex</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">remove_nans</span><span class="p">:</span>
+        <span class="n">truth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">truth</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">_isnan_multiple</span><span class="p">(</span> <span class="o">*</span><span class="p">([</span><span class="n">xarr</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">arrays</span><span class="p">))</span> <span class="p">)))</span>
+        
+    <span class="k">if</span> <span class="n">remove_infs</span><span class="p">:</span>
+        <span class="n">truth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">truth</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">_isinf_multiple</span><span class="p">(</span> <span class="o">*</span><span class="p">([</span><span class="n">xarr</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">arrays</span><span class="p">))</span> <span class="p">)))</span>
+    
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">truth</span><span class="p">)</span>
+
+<div class="viewcode-block" id="crop"><a class="viewcode-back" href="../snpl.html#snpl.crop">[docs]</a><span class="k">def</span> <span class="nf">crop</span><span class="p">(</span><span class="n">xarr</span><span class="p">,</span> <span class="n">rangex</span><span class="p">,</span> <span class="o">*</span><span class="n">arrays</span><span class="p">,</span> <span class="n">remove_nans</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">remove_infs</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Crop arrays to a given range. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        xarr: Key array. </span>
+<span class="sd">        rangex: Range along the key array. </span>
+<span class="sd">        *arrays: other arrays to be cropped. </span>
+<span class="sd">        remove_nans: If `True`, `nan`s in any of the given arrays are removed. Defaults to `True`. </span>
+<span class="sd">        remove_infs: If `True`, `inf`s in any of the given arrays are removed. Defaults to `True`. </span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Cropped arrays. </span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; import snpl</span>
+<span class="sd">        &gt;&gt;&gt; </span>
+<span class="sd">        &gt;&gt;&gt; x = np.arange(10).astype(float)</span>
+<span class="sd">        &gt;&gt;&gt; y = x + 0.1</span>
+<span class="sd">        &gt;&gt;&gt; z = x + 0.2</span>
+<span class="sd">        &gt;&gt;&gt; print(x)</span>
+<span class="sd">        &gt;&gt;&gt; [0. 1. 2. 3. 4. 5. 6. 7. 8. 9.]</span>
+<span class="sd">        &gt;&gt;&gt; print(y)</span>
+<span class="sd">        &gt;&gt;&gt; [0.1 1.1 2.1 3.1 4.1 5.1 6.1 7.1 8.1 9.1]</span>
+<span class="sd">        &gt;&gt;&gt; print(z)</span>
+<span class="sd">        &gt;&gt;&gt; [0.2 1.2 2.2 3.2 4.2 5.2 6.2 7.2 8.2 9.2]</span>
+<span class="sd">        &gt;&gt;&gt; </span>
+<span class="sd">        &gt;&gt;&gt; xc, yc, zc = snpl.crop(x, [2.5, 6.0], y, z)</span>
+<span class="sd">        &gt;&gt;&gt; print(xc)</span>
+<span class="sd">        &gt;&gt;&gt; [3. 4. 5. 6.]</span>
+<span class="sd">        &gt;&gt;&gt; print(yc)</span>
+<span class="sd">        &gt;&gt;&gt; [3.1 4.1 5.1 6.1]</span>
+<span class="sd">        &gt;&gt;&gt; print(zc)</span>
+<span class="sd">        &gt;&gt;&gt; [3.2 4.2 5.2 6.2]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">inds</span> <span class="o">=</span> <span class="n">_cropper</span><span class="p">(</span><span class="n">xarr</span><span class="p">,</span> <span class="n">rangex</span><span class="p">,</span> <span class="o">*</span><span class="n">arrays</span><span class="p">,</span> <span class="n">remove_nans</span><span class="o">=</span><span class="n">remove_nans</span><span class="p">,</span> <span class="n">remove_infs</span> <span class="o">=</span> <span class="n">remove_infs</span><span class="p">)</span>
+    
+    <span class="n">allarrays</span> <span class="o">=</span> <span class="p">[</span><span class="n">xarr</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">arrays</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="n">inds</span><span class="p">])</span> <span class="k">for</span> <span class="n">arr</span> <span class="ow">in</span> <span class="n">allarrays</span><span class="p">]</span></div>
+
+<span class="c1">#--------------#</span>
+<span class="c1"># text/drawing #</span>
+<span class="c1">#--------------#</span>
+<div class="viewcode-block" id="draw_powerlaw"><a class="viewcode-back" href="../snpl.html#snpl.draw_powerlaw">[docs]</a><span class="k">def</span> <span class="nf">draw_powerlaw</span><span class="p">(</span><span class="n">xi</span><span class="o">=</span><span class="mf">1e0</span><span class="p">,</span> <span class="n">xf</span><span class="o">=</span><span class="mf">1e1</span><span class="p">,</span> <span class="n">yi</span><span class="o">=</span><span class="mf">1e0</span><span class="p">,</span> <span class="n">exponent</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">lineprops</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Draw a power-law guide line in the log-log plot. </span>
+
+<span class="sd">    This function uses `Axes.plot()` to draw a guide line of a power law with a given exponent. </span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        xi: x coordinate of the start point of the guide line. </span>
+<span class="sd">        xf: x coordinate of the end point of the guide line. </span>
+<span class="sd">        yi: y coordinate of the start point of the guide line. </span>
+<span class="sd">        exponent: Exponent of the power law, i.e., slope of the line. </span>
+<span class="sd">        ax: Axes object to which the function operates. If `None`, the current Axes in `pyplot`. </span>
+<span class="sd">        lineprops: `kwargs` passed to `Axes.plot()`. </span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        The created `Line2D` object. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ax_</span> <span class="o">=</span> <span class="n">_get_proper_axis</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ax_</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">xi</span><span class="p">,</span> <span class="n">xf</span><span class="p">],</span> <span class="p">[</span><span class="n">yi</span><span class="p">,</span> <span class="n">yi</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">xf</span><span class="o">/</span><span class="n">xi</span><span class="p">,</span> <span class="n">exponent</span><span class="p">)],</span> <span class="o">**</span><span class="n">lineprops</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="text_corner"><a class="viewcode-back" href="../snpl.html#snpl.text_corner">[docs]</a><span class="k">def</span> <span class="nf">text_corner</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">0.90</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add a text in the canvas. </span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        s: Text. </span>
+<span class="sd">        x: x position. Fraction of the plot area width. </span>
+<span class="sd">        y: y position. Fraction of the plot area height. </span>
+<span class="sd">        ax: Axes object to which the function operates. If `None`, the current Axes in `pyplot`. </span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        The created `Text` object. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ax</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">ax</span>
+        
+    <span class="k">return</span> <span class="n">a</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">a</span><span class="o">.</span><span class="n">transAxes</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="arrow_edge"><a class="viewcode-back" href="../snpl.html#snpl.arrow_edge">[docs]</a><span class="k">def</span> <span class="nf">arrow_edge</span><span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span> <span class="n">len_rel</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">arrowprops</span><span class="p">):</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">_get_proper_axis</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">get_xscale</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;linear&quot;</span><span class="p">:</span>
+        <span class="n">xl</span><span class="p">,</span> <span class="n">xr</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()</span>
+        <span class="n">xw</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">xr</span> <span class="o">-</span> <span class="n">xl</span><span class="p">)</span>
+        <span class="n">len_abs</span> <span class="o">=</span> <span class="n">xw</span><span class="o">*</span><span class="n">len_rel</span>
+
+        <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="s2">&quot;left&quot;</span><span class="p">:</span>
+            <span class="n">xy</span> <span class="o">=</span> <span class="p">(</span><span class="n">xl</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+            <span class="n">xytext</span> <span class="o">=</span> <span class="p">(</span><span class="n">xl</span> <span class="o">+</span> <span class="n">len_abs</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">side</span> <span class="o">==</span> <span class="s2">&quot;right&quot;</span><span class="p">:</span>
+            <span class="n">xy</span> <span class="o">=</span> <span class="p">(</span><span class="n">xr</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+            <span class="n">xytext</span> <span class="o">=</span> <span class="p">(</span><span class="n">xr</span> <span class="o">-</span> <span class="n">len_abs</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">xl</span><span class="p">,</span> <span class="n">xr</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()</span>
+        <span class="n">log_xl</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">xl</span><span class="p">)</span>
+        <span class="n">log_xr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">xr</span><span class="p">)</span>
+        <span class="n">log_xw</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">log_xr</span> <span class="o">-</span> <span class="n">log_xl</span><span class="p">)</span>
+        <span class="n">log_len_abs</span> <span class="o">=</span> <span class="n">log_xw</span><span class="o">*</span><span class="n">len_rel</span>
+
+        <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="s2">&quot;left&quot;</span><span class="p">:</span>
+            <span class="n">xy</span> <span class="o">=</span> <span class="p">(</span><span class="n">xl</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+            <span class="n">xytext</span> <span class="o">=</span> <span class="p">(</span><span class="n">xl</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">log_len_abs</span><span class="p">),</span> <span class="n">height</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">side</span> <span class="o">==</span> <span class="s2">&quot;right&quot;</span><span class="p">:</span>
+            <span class="n">xy</span> <span class="o">=</span> <span class="p">(</span><span class="n">xr</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+            <span class="n">xytext</span> <span class="o">=</span> <span class="p">(</span><span class="n">xr</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">log_len_abs</span><span class="p">),</span> <span class="n">height</span><span class="p">)</span>
+
+    
+    <span class="k">return</span> <span class="n">a</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">xy</span><span class="o">=</span><span class="n">xy</span><span class="p">,</span> <span class="n">xytext</span><span class="o">=</span><span class="n">xytext</span><span class="p">,</span> <span class="n">xycoords</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="n">textcoords</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> 
+                      <span class="n">arrowprops</span><span class="o">=</span><span class="n">arrowprops</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="axvline"><a class="viewcode-back" href="../snpl.html#snpl.axvline">[docs]</a><span class="k">def</span> <span class="nf">axvline</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Shortcut to `pyplot.axvline()`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="axhline"><a class="viewcode-back" href="../snpl.html#snpl.axhline">[docs]</a><span class="k">def</span> <span class="nf">axhline</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Shortcut to `pyplot.axhline()`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">pyplot</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">snpl 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">snpl</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Shintaro Nakagawa.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.0.0.
+    </div>
+  </body>
+</html>

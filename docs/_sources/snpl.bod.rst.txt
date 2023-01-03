@@ -1,0 +1,7 @@
+snpl.bod module
+===============
+
+.. automodule:: snpl.bod
+   :members:
+   :undoc-members:
+   :show-inheritance:

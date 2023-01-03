@@ -1,0 +1,214 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>snpl.gpc module &#8212; snpl 0.3.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinxdoc.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="snpl.image module" href="snpl.image.html" />
+    <link rel="prev" title="snpl.fit module" href="snpl.fit.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="snpl.image.html" title="snpl.image module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="snpl.fit.html" title="snpl.fit module"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">snpl 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="snpl.html" accesskey="U">snpl package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">snpl.gpc module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-snpl.gpc">
+<span id="snpl-gpc-module"></span><h1>snpl.gpc module<a class="headerlink" href="#module-snpl.gpc" title="Permalink to this heading">¶</a></h1>
+<p>I/O interface utilities for GPC data.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="snpl.gpc.load_ExportOmniSECReveal">
+<span class="sig-prename descclassname"><span class="pre">snpl.gpc.</span></span><span class="sig-name descname"><span class="pre">load_ExportOmniSECReveal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_curves</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_measinfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'guess'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">srcs_peakres</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'guess'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/gpc.html#load_ExportOmniSECReveal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.gpc.load_ExportOmniSECReveal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads text files exported by <code class="docutils literal notranslate"><span class="pre">__ExportOmniSEC.py</span></code> into a <code class="docutils literal notranslate"><span class="pre">hicsv</span></code> object.</p>
+<p>OmniSEC (the newer software for the Reveal detector) has only a very limited
+functionality to export the chromatography data (which is pretty frustrating).
+The original author of this code (SN) developed a script <code class="docutils literal notranslate"><span class="pre">__ExportOmniSEC.py</span></code>
+to semi-automatically export the data in a handy text format.</p>
+<p>For the sake of generality, the exported data are separated into several files.
+The main file containing the raw curve data, the file containing the metadata
+of the measurement (<code class="docutils literal notranslate"><span class="pre">*_MeasInfo.txt</span></code>), and the analysis results
+(<code class="docutils literal notranslate"><span class="pre">*_PeakResults_*.txt</span></code>).</p>
+<p>This function loads these files and combine them into a single <code class="docutils literal notranslate"><span class="pre">hicsv</span></code> object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>src_curves</strong> (<em>str</em>) – Path to the curve data file. Mandatory.</p></li>
+<li><p><strong>src_measinfo</strong> (<em>str</em>) – Path to the MeasInfo file. If it is set to “guess”, the function
+infers the path from <code class="docutils literal notranslate"><span class="pre">src_curves</span></code>.</p></li>
+<li><p><strong>srcs_peaks</strong> (<em>str</em><em> or </em><em>list</em>) – Path(s) to the PeakResults file. If it is set to “guess”,
+the function infers the path(s) from <code class="docutils literal notranslate"><span class="pre">src_curves</span></code>.
+Otherwise, if it is a single string representing a path,
+it is treated as the only associated PeakResults file.
+If it is a list of strings, it is treated as the list of
+multiple PeakResults files associated to the given curve data.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>an <code class="docutils literal notranslate"><span class="pre">hicsv.hicsv</span></code> object.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">snpl</span> <span class="kn">import</span> <span class="n">gpc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">gpc</span><span class="o">.</span><span class="n">load_ExportOmniSECReveal</span><span class="p">(</span><span class="s2">&quot;2022-07-14-15-30-59-20220714_SN628A.txt&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">h</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="go">dict_keys([&#39;MeasInfo&#39;, &#39;PeakResults 20220714-abs-2&#39;])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snpl.gpc.load_LabSolutionsAscii">
+<span class="sig-prename descclassname"><span class="pre">snpl.gpc.</span></span><span class="sig-name descname"><span class="pre">load_LabSolutionsAscii</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'\t'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'[LC</span> <span class="pre">Chromatogram'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/gpc.html#load_LabSolutionsAscii"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.gpc.load_LabSolutionsAscii" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads the exported ASCII file from Shimadzu LabSolutions software.</p>
+<p>LabSolutions ASCII file has some header part at the beginning
+followed by multiple “blocks” containing time series data
+for different channels (RI, UV, pressure, etc).
+This function extracts one of the channel (specified by <code class="docutils literal notranslate"><span class="pre">target</span></code> argument)
+and returns it as a convenient <code class="docutils literal notranslate"><span class="pre">hicsv</span></code> object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fp</strong> (<em>str</em><em> or </em><em>file-like</em>) – path to the file or file-like object.</p></li>
+<li><p><strong>sep</strong> (<em>str</em>) – delimiter used in the ASCII file. Usually a tab.</p></li>
+<li><p><strong>target</strong> (<em>str</em>) – the beginning of the block of interest.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a <code class="docutils literal notranslate"><span class="pre">hicsv.hicsv</span></code> object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snpl.gpc.load_OmniSECExported">
+<span class="sig-prename descclassname"><span class="pre">snpl.gpc.</span></span><span class="sig-name descname"><span class="pre">load_OmniSECExported</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/gpc.html#load_OmniSECExported"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.gpc.load_OmniSECExported" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads the exported text file from the OmniSEC software (older one)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snpl.gpc.load_TosohAscii">
+<span class="sig-prename descclassname"><span class="pre">snpl.gpc.</span></span><span class="sig-name descname"><span class="pre">load_TosohAscii</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/gpc.html#load_TosohAscii"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.gpc.load_TosohAscii" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads a legacy Tosoh ascii file into a <code class="docutils literal notranslate"><span class="pre">hicsv</span></code> object.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snpl.gpc.mw2time">
+<span class="sig-prename descclassname"><span class="pre">snpl.gpc.</span></span><span class="sig-name descname"><span class="pre">mw2time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mw</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">polycoeffs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/gpc.html#mw2time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.gpc.mw2time" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="snpl.gpc.time2mw">
+<span class="sig-prename descclassname"><span class="pre">snpl.gpc.</span></span><span class="sig-name descname"><span class="pre">time2mw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">polycoeffs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/gpc.html#time2mw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.gpc.time2mw" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">snpl.gpc module</a><ul>
+<li><a class="reference internal" href="#snpl.gpc.load_ExportOmniSECReveal"><code class="docutils literal notranslate"><span class="pre">load_ExportOmniSECReveal()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.gpc.load_LabSolutionsAscii"><code class="docutils literal notranslate"><span class="pre">load_LabSolutionsAscii()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.gpc.load_OmniSECExported"><code class="docutils literal notranslate"><span class="pre">load_OmniSECExported()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.gpc.load_TosohAscii"><code class="docutils literal notranslate"><span class="pre">load_TosohAscii()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.gpc.mw2time"><code class="docutils literal notranslate"><span class="pre">mw2time()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.gpc.time2mw"><code class="docutils literal notranslate"><span class="pre">time2mw()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="snpl.fit.html"
+                          title="previous chapter">snpl.fit module</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="snpl.image.html"
+                          title="next chapter">snpl.image module</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/snpl.gpc.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="snpl.image.html" title="snpl.image module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="snpl.fit.html" title="snpl.fit module"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">snpl 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="snpl.html" >snpl package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">snpl.gpc module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Shintaro Nakagawa.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.0.0.
+    </div>
+  </body>
+</html>

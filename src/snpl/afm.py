@@ -10,7 +10,7 @@ MAGIC_LINE = "Gwyddion Simple Field 1.0"
 
 HFIELDS = ("XRes", "YRes", "XReal", "YReal", "XOffset", "YOffset", "Title", "XYUnits", "ZUnits")
 
-class GwyddionSimpleField(object):
+class GwyddionSimpleField:
     '''Read/write interface for Gwyddion Simple Field format. 
 
     See http://gwyddion.net/documentation/user-guide-en/gsf.html for specifications. 

@@ -1,0 +1,389 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snpl.gpc &#8212; snpl 0.3.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinxdoc.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">snpl 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../snpl.html" accesskey="U">snpl</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">snpl.gpc</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for snpl.gpc</h1><div class="highlight"><pre>
+<span></span><span class="c1"># coding=utf-8</span>
+<span class="sd">&#39;&#39;&#39;I/O interface utilities for GPC data. </span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">hicsv</span>
+<span class="kn">import</span> <span class="nn">io</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<div class="viewcode-block" id="load_ExportOmniSECReveal"><a class="viewcode-back" href="../../snpl.gpc.html#snpl.gpc.load_ExportOmniSECReveal">[docs]</a><span class="k">def</span> <span class="nf">load_ExportOmniSECReveal</span><span class="p">(</span><span class="n">src_curves</span><span class="p">,</span> <span class="n">src_measinfo</span><span class="o">=</span><span class="s2">&quot;guess&quot;</span><span class="p">,</span> <span class="n">srcs_peakres</span><span class="o">=</span><span class="s2">&quot;guess&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Loads text files exported by ``__ExportOmniSEC.py`` into a ``hicsv`` object. </span>
+
+<span class="sd">    OmniSEC (the newer software for the Reveal detector) has only a very limited </span>
+<span class="sd">    functionality to export the chromatography data (which is pretty frustrating). </span>
+<span class="sd">    The original author of this code (SN) developed a script ``__ExportOmniSEC.py``</span>
+<span class="sd">    to semi-automatically export the data in a handy text format. </span>
+
+<span class="sd">    For the sake of generality, the exported data are separated into several files. </span>
+<span class="sd">    The main file containing the raw curve data, the file containing the metadata </span>
+<span class="sd">    of the measurement (``*_MeasInfo.txt``), and the analysis results </span>
+<span class="sd">    (``*_PeakResults_*.txt``). </span>
+
+<span class="sd">    This function loads these files and combine them into a single ``hicsv`` object. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        src_curves (str): Path to the curve data file. Mandatory. </span>
+<span class="sd">        src_measinfo (str): Path to the MeasInfo file. If it is set to &quot;guess&quot;, the function</span>
+<span class="sd">            infers the path from ``src_curves``. </span>
+<span class="sd">        srcs_peaks (str or list): Path(s) to the PeakResults file. If it is set to &quot;guess&quot;, </span>
+<span class="sd">            the function infers the path(s) from ``src_curves``. </span>
+<span class="sd">            Otherwise, if it is a single string representing a path, </span>
+<span class="sd">            it is treated as the only associated PeakResults file. </span>
+<span class="sd">            If it is a list of strings, it is treated as the list of </span>
+<span class="sd">            multiple PeakResults files associated to the given curve data. </span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        an ``hicsv.hicsv`` object. </span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; from snpl import gpc</span>
+<span class="sd">        &gt;&gt;&gt; d = gpc.load_ExportOmniSECReveal(&quot;2022-07-14-15-30-59-20220714_SN628A.txt&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; print(d.h.keys())</span>
+<span class="sd">        dict_keys([&#39;MeasInfo&#39;, &#39;PeakResults 20220714-abs-2&#39;])</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c1"># raw data</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">hicsv</span><span class="o">.</span><span class="n">txt2hicsv</span><span class="p">(</span><span class="n">src_curves</span><span class="p">,</span> <span class="n">key_line</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    
+    <span class="n">srcd</span><span class="p">,</span> <span class="n">srcf</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">src_curves</span><span class="p">)</span>
+    <span class="n">srcf</span><span class="p">,</span> <span class="n">srce</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">srcf</span><span class="p">)</span>
+    
+    <span class="c1"># find measinfo</span>
+    <span class="k">if</span> <span class="n">src_measinfo</span> <span class="o">==</span> <span class="s2">&quot;guess&quot;</span><span class="p">:</span>
+        <span class="n">src_meas</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">srcd</span><span class="p">,</span> <span class="n">srcf</span> <span class="o">+</span> <span class="s2">&quot;_MeasInfo.txt&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">src_meas</span> <span class="o">=</span> <span class="n">src_measinfo</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">src_meas</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+            <span class="n">measinfo</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Cannot find/open&quot;</span><span class="p">,</span> <span class="n">src_meas</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;MeasInfo&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">measinfo</span>
+    
+    <span class="c1"># find PeakResults</span>
+    <span class="k">if</span> <span class="n">srcs_peakres</span> <span class="o">==</span> <span class="s2">&quot;guess&quot;</span><span class="p">:</span>
+        <span class="n">srcs_res</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">srcd</span><span class="p">,</span> <span class="n">srcf</span> <span class="o">+</span> <span class="s2">&quot;_PeakResults_*.txt&quot;</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">srcs_peakres</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="c1"># assume single string input</span>
+        <span class="n">srcs_res</span> <span class="o">=</span> <span class="p">[</span><span class="n">srcs_peakres</span><span class="p">,</span> <span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># assume the list input</span>
+        <span class="n">srcs_res</span> <span class="o">=</span> <span class="n">srcs_peakres</span>
+
+    <span class="k">for</span> <span class="n">src_res</span> <span class="ow">in</span> <span class="n">srcs_res</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">src_res</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+                <span class="n">peakres</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Cannot find/open&quot;</span><span class="p">,</span> <span class="n">src_res</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">b</span><span class="p">,</span> <span class="n">meth</span> <span class="o">=</span> <span class="n">src_res</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">&quot;_PeakResults_&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">meth</span><span class="p">,</span> <span class="n">e</span> <span class="o">=</span> <span class="n">meth</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;PeakResults &quot;</span> <span class="o">+</span> <span class="n">meth</span><span class="p">]</span> <span class="o">=</span> <span class="n">peakres</span>        
+    
+    <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="load_OmniSECExported"><a class="viewcode-back" href="../../snpl.gpc.html#snpl.gpc.load_OmniSECExported">[docs]</a><span class="k">def</span> <span class="nf">load_OmniSECExported</span><span class="p">(</span><span class="n">fp</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Loads the exported text file from the OmniSEC software (older one)</span>
+<span class="sd">    </span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">fp</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+        
+    <span class="c1"># divide into blocks</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">l</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\r\n</span><span class="s2"> &quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">]</span>
+    
+    <span class="n">blocks</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="n">block</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">l</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+            <span class="n">block</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">block</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+    <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+    
+        
+    <span class="c1"># TODO: parse header part</span>
+    
+    <span class="c1"># load data part</span>
+    <span class="k">with</span> <span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">blocks</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">hicsv</span><span class="o">.</span><span class="n">txt2hicsv</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">key_line</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">keys</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">cols</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">col</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+                <span class="n">newcol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">_float_blank_nan</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">col</span><span class="p">])</span>
+                <span class="n">c</span><span class="o">.</span><span class="n">replace_column</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">newcol</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">c</span></div>
+
+<span class="k">def</span> <span class="nf">_float_blank_nan</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Utility function to convert empty string to nan and non-empty string to float. </span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">string</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="load_LabSolutionsAscii"><a class="viewcode-back" href="../../snpl.gpc.html#snpl.gpc.load_LabSolutionsAscii">[docs]</a><span class="k">def</span> <span class="nf">load_LabSolutionsAscii</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;[LC Chromatogram&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Loads the exported ASCII file from Shimadzu LabSolutions software. </span>
+
+<span class="sd">    LabSolutions ASCII file has some header part at the beginning </span>
+<span class="sd">    followed by multiple &quot;blocks&quot; containing time series data </span>
+<span class="sd">    for different channels (RI, UV, pressure, etc). </span>
+<span class="sd">    This function extracts one of the channel (specified by ``target`` argument)</span>
+<span class="sd">    and returns it as a convenient ``hicsv`` object. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        fp (str or file-like): path to the file or file-like object. </span>
+<span class="sd">        sep (str): delimiter used in the ASCII file. Usually a tab. </span>
+<span class="sd">        target (str): the beginning of the block of interest. </span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        a ``hicsv.hicsv`` object. </span>
+
+<span class="sd">    </span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">fp</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    
+    <span class="c1"># divide into blocks</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">l</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">]</span>
+    
+    <span class="n">blocks</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="n">block</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">l</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+            <span class="n">block</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">block</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+    <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+    
+    <span class="n">b_ch</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># search for blocks</span>
+    <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">b</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">target</span><span class="p">):</span>
+                <span class="n">b_ch</span> <span class="o">=</span> <span class="n">b</span>
+                <span class="k">break</span>
+    
+    <span class="c1"># b_mw = []</span>
+    <span class="c1"># for b in blocks:</span>
+    <span class="c1">#     if b:</span>
+    <span class="c1">#         if b[0].startswith(&quot;[Molecular Weight Distribution Table&quot;):</span>
+    <span class="c1">#             b_mw = b</span>
+    <span class="c1">#             break</span>
+    
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">hicsv</span><span class="o">.</span><span class="n">hicsv</span><span class="p">()</span>
+        
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fp</span>
+        
+    <span class="k">if</span> <span class="n">b_ch</span><span class="p">:</span>
+        <span class="n">keys</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">_read_LabSolutionsDataBlock</span><span class="p">(</span><span class="n">b_ch</span><span class="p">,</span> <span class="n">sep</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">cols</span><span class="p">):</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">append_column</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+            
+            
+    <span class="c1"># if b_mw:</span>
+    <span class="c1">#     keys, cols = _read_LabSolutionsDataBlock(b_mw, sep)</span>
+    <span class="c1"># </span>
+    <span class="c1">#     keys[keys.index(&quot;R.Time&quot;)] = &quot;MW R.Time&quot;</span>
+    <span class="c1">#     </span>
+    <span class="c1">#     for k, c in zip(keys, cols):</span>
+    <span class="c1">#         ret.set_column(k, c)</span>
+        
+    <span class="k">return</span> <span class="n">ret</span></div>
+
+<span class="k">def</span> <span class="nf">_read_LabSolutionsDataBlock</span><span class="p">(</span><span class="n">lines</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">):</span>
+    
+    <span class="n">i_data</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">sep</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">i_data</span> <span class="o">=</span> <span class="n">i</span>
+            <span class="k">break</span>
+        
+    <span class="n">head</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[:</span><span class="n">i_data</span><span class="p">]</span>
+    <span class="n">tail</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="n">i_data</span><span class="p">:]</span>
+    
+    <span class="n">mult</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">head</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Intensity Multiplier&quot;</span><span class="p">):</span>
+            <span class="n">mult</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">sep</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">break</span>
+        
+    <span class="n">keys</span> <span class="o">=</span> <span class="n">head</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">sep</span><span class="p">)</span>
+        
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="n">ncols</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">tail</span><span class="p">:</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">sep</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="o">!=</span> <span class="n">ncols</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">row</span><span class="p">]</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+        
+    <span class="n">cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">rows</span><span class="p">))</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">col</span><span class="p">)</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">cols</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="s2">&quot;Intensity&quot;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+        <span class="n">i_int</span> <span class="o">=</span> <span class="n">keys</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;Intensity&quot;</span><span class="p">)</span>
+        <span class="n">cols</span><span class="p">[</span><span class="n">i_int</span><span class="p">]</span> <span class="o">=</span> <span class="n">cols</span><span class="p">[</span><span class="n">i_int</span><span class="p">]</span><span class="o">*</span><span class="n">mult</span>
+    
+    
+    <span class="k">return</span> <span class="n">keys</span><span class="p">,</span> <span class="n">cols</span>
+
+
+<div class="viewcode-block" id="load_TosohAscii"><a class="viewcode-back" href="../../snpl.gpc.html#snpl.gpc.load_TosohAscii">[docs]</a><span class="k">def</span> <span class="nf">load_TosohAscii</span><span class="p">(</span><span class="n">fp</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Loads a legacy Tosoh ascii file into a ``hicsv`` object. </span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="c1"># regard fp as a path</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># regard fp as a file-like obj</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">fp</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    
+    <span class="n">tcsv</span> <span class="o">=</span> <span class="n">hicsv</span><span class="o">.</span><span class="n">hicsv</span><span class="p">()</span>
+    <span class="n">ts</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ys</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">l</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">elif</span> <span class="n">l</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">elems</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">ts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">elems</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()))</span>
+            <span class="n">ys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">elems</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()))</span>
+
+    <span class="n">tcsv</span><span class="o">.</span><span class="n">append_column</span><span class="p">(</span><span class="s2">&quot;t&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ts</span><span class="p">))</span>
+    <span class="n">tcsv</span><span class="o">.</span><span class="n">append_column</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ys</span><span class="p">))</span>
+            
+    <span class="k">return</span> <span class="n">tcsv</span></div>
+
+
+
+<div class="viewcode-block" id="time2mw"><a class="viewcode-back" href="../../snpl.gpc.html#snpl.gpc.time2mw">[docs]</a><span class="k">def</span> <span class="nf">time2mw</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">polycoeffs</span><span class="p">):</span>
+    <span class="n">logmw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">poly1d</span><span class="p">(</span><span class="n">polycoeffs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">logmw</span><span class="p">(</span><span class="n">t</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="mw2time"><a class="viewcode-back" href="../../snpl.gpc.html#snpl.gpc.mw2time">[docs]</a><span class="k">def</span> <span class="nf">mw2time</span><span class="p">(</span><span class="n">mw</span><span class="p">,</span> <span class="n">polycoeffs</span><span class="p">):</span>
+    <span class="n">logmw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">mw</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">polycoeffs</span><span class="p">]</span>
+    <span class="n">p</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">logmw</span>
+    <span class="n">roots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roots</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">roots</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isreal</span><span class="p">(</span><span class="n">roots</span><span class="p">)][</span><span class="mi">0</span><span class="p">])</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">snpl 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../snpl.html" >snpl</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">snpl.gpc</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Shintaro Nakagawa.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.0.0.
+    </div>
+  </body>
+</html>

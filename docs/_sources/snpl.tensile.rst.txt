@@ -1,0 +1,7 @@
+snpl.tensile module
+===================
+
+.. automodule:: snpl.tensile
+   :members:
+   :undoc-members:
+   :show-inheritance:

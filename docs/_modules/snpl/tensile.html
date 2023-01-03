@@ -1,0 +1,344 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>snpl.tensile &#8212; snpl 0.3.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinxdoc.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">snpl 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../snpl.html" accesskey="U">snpl</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">snpl.tensile</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for snpl.tensile</h1><div class="highlight"><pre>
+<span></span><span class="c1"># coding=utf-8</span>
+<span class="sd">&quot;&quot;&quot;I/O interfaces for tensile test data</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">hicsv</span>
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="k">def</span> <span class="nf">_str2number</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">string</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">string</span>
+
+
+<span class="k">def</span> <span class="nf">_load_Trapezium_from_blocks</span><span class="p">(</span><span class="n">blocks</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    takes the &quot;blocks&quot; and returns a list of CSVs.  </span>
+<span class="sd">    a block contains consecutive rows in the original Trapezium file. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># header</span>
+    <span class="n">keys</span> <span class="o">=</span> <span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">_str2number</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="p">]</span>
+    
+    <span class="n">h</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">values</span><span class="p">)}</span>
+    
+    <span class="c1"># skip to the sample geometry</span>
+    <span class="c1"># the sample geometry block should have at least 5 rows</span>
+    <span class="c1"># this is to deal with Trapezium 2 cycle file </span>
+    <span class="c1"># that has an additional block next to the header block</span>
+    <span class="n">skip</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">blocks</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+        <span class="n">skip</span> <span class="o">=</span> <span class="n">i</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">block</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">break</span>
+        
+    <span class="c1"># sample names</span>
+    <span class="n">key_name</span> <span class="o">=</span> <span class="n">blocks</span><span class="p">[</span><span class="n">skip</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">[</span><span class="n">skip</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">4</span><span class="p">:]]</span>
+    
+    <span class="c1"># sample geometry</span>
+    <span class="n">keys</span>  <span class="o">=</span> <span class="n">blocks</span><span class="p">[</span><span class="n">skip</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="n">units</span> <span class="o">=</span> <span class="n">blocks</span><span class="p">[</span><span class="n">skip</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">3</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="n">keys_testpiece</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="s2">&quot; [</span><span class="si">{0}</span><span class="s2">]&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">units</span><span class="p">)]</span>
+    <span class="n">values_testpiece</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">[</span><span class="n">skip</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">4</span><span class="p">:]:</span>
+        <span class="n">values_testpiece</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">_str2number</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">:]])</span>
+    
+    
+    <span class="n">num_batches</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">blocks</span><span class="p">[</span><span class="n">skip</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">4</span><span class="p">:])</span>
+        
+    <span class="n">keys</span>  <span class="o">=</span> <span class="n">blocks</span><span class="p">[</span><span class="n">skip</span><span class="o">+</span><span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="n">units</span> <span class="o">=</span> <span class="n">blocks</span><span class="p">[</span><span class="n">skip</span><span class="o">+</span><span class="mi">2</span><span class="p">][</span><span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="n">keys_property</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="s2">&quot; [</span><span class="si">{0}</span><span class="s2">]&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">units</span><span class="p">)]</span>
+
+    <span class="n">values_property</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">[</span><span class="n">skip</span><span class="o">+</span><span class="mi">2</span><span class="p">][</span><span class="mi">4</span><span class="p">:</span><span class="mi">4</span><span class="o">+</span><span class="n">num_batches</span><span class="p">]:</span>
+        <span class="n">values_property</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">_str2number</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">:]])</span>
+    
+    <span class="n">csvs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_batches</span><span class="p">):</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">hicsv</span><span class="o">.</span><span class="n">hicsv</span><span class="p">()</span>
+        <span class="n">c</span><span class="o">.</span><span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+        
+        <span class="n">c</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="n">key_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keys_testpiece</span><span class="p">,</span> <span class="n">values_testpiece</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+                
+        <span class="k">if</span> <span class="n">keys_property</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keys_property</span><span class="p">,</span> <span class="n">values_property</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+                <span class="n">c</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+        
+        <span class="n">datablock</span> <span class="o">=</span> <span class="n">blocks</span><span class="p">[</span><span class="n">skip</span><span class="o">+</span><span class="mi">3</span><span class="o">+</span><span class="n">i</span><span class="p">]</span>
+        
+        <span class="c1"># get valid columns</span>
+        <span class="n">valid_columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">datablock</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="k">if</span> <span class="n">datablock</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">]]</span>
+        
+        <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">datablock</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">valid_columns</span><span class="p">]</span>
+        <span class="n">units</span> <span class="o">=</span> <span class="p">[</span><span class="n">datablock</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">valid_columns</span><span class="p">]</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="s2">&quot; [</span><span class="si">{0}</span><span class="s2">]&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">units</span><span class="p">)]</span>
+                
+        <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">datablock</span><span class="p">[</span><span class="mi">3</span><span class="p">:]:</span>
+            <span class="n">valid_row</span> <span class="o">=</span> <span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">valid_columns</span><span class="p">]</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">_str2number</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">valid_row</span><span class="p">])</span>
+        
+        <span class="n">cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">rows</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">cols</span><span class="p">):</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">append_column</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">col</span><span class="p">))</span>
+        
+        <span class="n">c</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;Batch ID&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
+        
+        <span class="n">csvs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">csvs</span>
+
+
+<div class="viewcode-block" id="load_TrapeziumCSV"><a class="viewcode-back" href="../../snpl.tensile.html#snpl.tensile.load_TrapeziumCSV">[docs]</a><span class="k">def</span> <span class="nf">load_TrapeziumCSV</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;shift-jis&quot;</span><span class="p">,</span> <span class="n">dialect</span><span class="o">=</span><span class="s2">&quot;excel&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Loads a CSV file exported by Trapezium software. </span>
+
+<span class="sd">    Works both for Trapezium 3 (for AGS-X) and Trapezium 2 (for EZ-L). </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        fp (str or file-like): Path or file-like object of the source CSV file. </span>
+<span class="sd">        encoding (str): Encoding of the source file. Defaults to shift-jis. </span>
+<span class="sd">        dialect (str): Dialect of the CSV to be read. Defaults to ``excel`` (comma-delimited).</span>
+<span class="sd">            Setting to ``excel-tab`` enables loading a tab-delimited values (TSV).  </span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A list of ``hicsv.hicsv`` objects for each test pieces (batches). </span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        This function is compatible with the data collected with &quot;Single&quot; and &quot;Control&quot; programs </span>
+<span class="sd">        in the Trapezium software, but not with &quot;Cycle&quot; program. </span>
+<span class="sd">        For the data collected with &quot;Cycle&quot; program, use ``load_TrapeziumCycleCSV``. </span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; ds = tensile.load_TrapeziumCSV(&quot;trapezium_csv.csv&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; </span>
+<span class="sd">        &gt;&gt;&gt; for d in ds:</span>
+<span class="sd">        &gt;&gt;&gt;     d.save(&quot;piece &quot; + c.h[&quot;名前&quot;] + &quot;.txt&quot;) # save each batch using the batch name as the file name</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">fp</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    
+    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">lines</span><span class="p">,</span> <span class="n">dialect</span><span class="o">=</span><span class="n">dialect</span><span class="p">)</span>
+    
+    <span class="n">blocks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">block</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">row</span> <span class="ow">or</span> <span class="nb">all</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">==</span><span class="s2">&quot;&quot;</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">row</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">block</span><span class="p">:</span>
+                <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+                <span class="n">block</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">block</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+    
+    <span class="c1"># this is to ensure that the last block is properly added to blocks. </span>
+    <span class="k">if</span> <span class="n">block</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">blocks</span> <span class="ow">and</span> <span class="n">block</span><span class="p">:</span>
+        <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">_load_Trapezium_from_blocks</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="load_TrapeziumCycleCSV"><a class="viewcode-back" href="../../snpl.tensile.html#snpl.tensile.load_TrapeziumCycleCSV">[docs]</a><span class="k">def</span> <span class="nf">load_TrapeziumCycleCSV</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;shift-jis&quot;</span><span class="p">,</span> <span class="n">initial_cycle_id</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">dialect</span><span class="o">=</span><span class="s2">&quot;excel&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Loads a cycle CSV file exported by Trapezium software. </span>
+
+<span class="sd">    To discriminate between the cycles, each cycle will be given a unique and consequtive </span>
+<span class="sd">    &quot;Cycle ID&quot;, usually starting from zero. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        fp (str or file-like): Path or file-like object of the source CSV file. </span>
+<span class="sd">        encoding (str): Encoding of the source file. Defaults to shift-jis. </span>
+<span class="sd">        initial_cycle_id (int): Index of the first cycle. </span>
+<span class="sd">            This integer number will be used as the &quot;Cycle ID&quot; of the first cycle. </span>
+<span class="sd">        dialect (str): Dialect of the CSV to be read. Defaults to ``excel`` (comma-delimited).</span>
+<span class="sd">            Setting to ``excel-tab`` enables loading a tab-delimited values (TSV).  </span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A list of ``hicsv.hicsv`` objects for each cycle. </span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        This function is not compatible with the data collected with &quot;Single&quot; and &quot;Control&quot; programs </span>
+<span class="sd">        in the Trapezium software. For these cases, use ``load_TrapeziumCSV``. </span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; ds = tensile.load_TrapeziumCSV(&quot;trapezium_cycle.csv&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; </span>
+<span class="sd">        &gt;&gt;&gt; for d in ds:</span>
+<span class="sd">        &gt;&gt;&gt;     d.save(&quot;piece &quot; + c.h[&quot;Cycle ID&quot;] + &quot;.txt&quot;) # save each cycle using the cycle id as the file name</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">fp</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    
+    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">lines</span><span class="p">,</span> <span class="n">dialect</span><span class="o">=</span><span class="n">dialect</span><span class="p">)</span>
+    
+    <span class="n">blocks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">block</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">row</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
+            <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+            <span class="n">block</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">block</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+    
+    <span class="c1"># header</span>
+    <span class="n">keys</span> <span class="o">=</span> <span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">_str2number</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="p">]</span>
+    
+    <span class="n">h</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">values</span><span class="p">)}</span>
+    
+    <span class="c1"># cycle number</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">num_cycles</span> <span class="o">=</span> <span class="n">h</span><span class="p">[</span><span class="s2">&quot;サイクル回数&quot;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">num_cycles</span> <span class="o">=</span> <span class="n">h</span><span class="p">[</span><span class="s2">&quot;ｻｲｸﾙ回数&quot;</span><span class="p">]</span>
+    
+    <span class="c1"># sample geometry</span>
+    <span class="n">keys</span> <span class="o">=</span> <span class="n">blocks</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="n">units</span> <span class="o">=</span> <span class="n">blocks</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">3</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="n">keys_testpiece</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="s2">&quot; [</span><span class="si">{0}</span><span class="s2">]&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">units</span><span class="p">)]</span>
+    <span class="n">values_testpiece</span> <span class="o">=</span> <span class="p">[</span><span class="n">_str2number</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">4</span><span class="p">][</span><span class="mi">1</span><span class="p">:]]</span>
+    
+    <span class="c1"># num_batches = len(blocks[1][4:])</span>
+        
+    <span class="n">keys</span> <span class="o">=</span> <span class="n">blocks</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="n">units</span> <span class="o">=</span> <span class="n">blocks</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="n">keys_property</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="s2">&quot; [</span><span class="si">{0}</span><span class="s2">]&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">units</span><span class="p">)]</span>
+
+    <span class="n">values_property</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">4</span><span class="p">:</span><span class="mi">4</span><span class="o">+</span><span class="n">num_cycles</span><span class="p">]:</span>
+        <span class="n">values_property</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">_str2number</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">:]])</span>
+            
+    <span class="n">csvs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_cycles</span><span class="p">):</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">hicsv</span><span class="o">.</span><span class="n">hicsv</span><span class="p">()</span>
+        <span class="n">c</span><span class="o">.</span><span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keys_testpiece</span><span class="p">,</span> <span class="n">values_testpiece</span><span class="p">):</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+        
+        <span class="k">if</span> <span class="n">keys_property</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keys_property</span><span class="p">,</span> <span class="n">values_property</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+                <span class="n">c</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+
+        <span class="n">datablock</span> <span class="o">=</span> <span class="n">blocks</span><span class="p">[</span><span class="mi">3</span><span class="o">+</span><span class="n">i</span><span class="p">]</span>
+        
+        <span class="n">keys</span> <span class="o">=</span> <span class="n">datablock</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">units</span> <span class="o">=</span> <span class="n">datablock</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="s2">&quot; [</span><span class="si">{0}</span><span class="s2">]&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">units</span><span class="p">)]</span>
+        
+        <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">datablock</span><span class="p">[</span><span class="mi">3</span><span class="p">:]:</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">_str2number</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">row</span><span class="p">])</span>
+        
+        <span class="n">cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">rows</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">cols</span><span class="p">):</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">append_column</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">col</span><span class="p">))</span>
+        
+        <span class="n">c</span><span class="o">.</span><span class="n">h</span><span class="p">[</span><span class="s2">&quot;Cycle ID&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="n">initial_cycle_id</span>
+        
+        <span class="n">csvs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">csvs</span></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">snpl 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../snpl.html" >snpl</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">snpl.tensile</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Shintaro Nakagawa.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.0.0.
+    </div>
+  </body>
+</html>

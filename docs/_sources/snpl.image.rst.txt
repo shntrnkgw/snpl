@@ -1,0 +1,7 @@
+snpl.image module
+=================
+
+.. automodule:: snpl.image
+   :members:
+   :undoc-members:
+   :show-inheritance:
