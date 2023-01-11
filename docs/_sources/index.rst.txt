@@ -22,6 +22,16 @@ It uses the hicsv_ object as a unified data interface.
 
 .. _hicsv: https://github.com/shntrnkgw/hicsv
 
+Installation
+------------
+
+``snpl`` is *not* available in any package repositories
+other than GitHub. To install, 
+
+.. code-block:: console
+
+   pip install pip install https://github.com/shntrnkgw/snpl/archive/refs/heads/main.zip
+
 API Reference
 -------------
 
