@@ -1,7 +1,9 @@
 # snpl
 Personal utilities for data processing &amp; visualization
 
-## What it is 
+## Documentation
+
+[The full API documentation is available here. ](https://shntrnkgw.github.io/snpl/)
 
 ## Installation
 
