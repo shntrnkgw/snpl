@@ -30,7 +30,7 @@ other than GitHub. To install,
 
 .. code-block:: console
 
-   pip install pip install https://github.com/shntrnkgw/snpl/archive/refs/heads/main.zip
+   pip install https://github.com/shntrnkgw/snpl/archive/refs/heads/main.zip
 
 API Reference
 -------------
