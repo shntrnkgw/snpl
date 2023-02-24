@@ -206,11 +206,14 @@ def load_TrapeziumCycleCSV(fp, encoding="shift-jis", initial_cycle_id=0, dialect
     h = {k: v for k, v in zip(keys, values)}
     
     # cycle number
+    # this may not be the actual number of cycles
+    # if the measurement was terminated before completing 
+    # all cycles
     try:
         num_cycles = h["サイクル回数"]
     except KeyError:
         num_cycles = h["ｻｲｸﾙ回数"]
-    
+        
     # sample geometry
     keys = blocks[1][2][1:]
     units = blocks[1][3][1:]
@@ -238,7 +241,13 @@ def load_TrapeziumCycleCSV(fp, encoding="shift-jis", initial_cycle_id=0, dialect
             for k, v in zip(keys_property, values_property[i]):
                 c.h[k] = v
 
-        datablock = blocks[3+i]
+        # IndexError can be raised
+        # if num_cycles does not match the actual 
+        # cycle number recorded in the file
+        try:
+            datablock = blocks[3+i]
+        except IndexError:
+            break
         
         keys = datablock[1]
         units = datablock[2]
