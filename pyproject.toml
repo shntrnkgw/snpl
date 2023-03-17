@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "snpl"
-version = "0.3.1"
+version = "0.3.2"
 description = "Personal utilities for data processing & visualization"
 readme = "README.md"
 authors = [{name = "Shintaro Nakagawa", email = "shntrnkgw@gmail.com"}]
