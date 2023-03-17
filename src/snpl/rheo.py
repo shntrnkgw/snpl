@@ -10,6 +10,110 @@ import struct
 
 import os.path
 
+def _parse_TriosExportedStepBlock(lines):
+    step_name = lines[1]
+    keys = lines[2].split("\t")
+    units = lines[3].split("\t")
+
+    keys = ["{0} [{1}]".format(k, u) for k, u in zip(keys, units)]
+
+    ncol = len(keys)
+    columns = [[] for i in range(ncol)]
+    for l in lines[4:]:
+        if not l:
+            break
+        else:
+            row = l.split("\t")
+            assert len(row) == ncol
+
+            for i in range(ncol):
+                try:
+                    columns[i].append(float(row[i]))
+                except ValueError:
+                    columns[i].append(row[i])
+    
+    out = hicsv.hicsv()
+    for key, column in zip(keys, columns):
+        out.append_column(key, np.array(column))
+    
+    return step_name, out
+
+def load_TriosExported(fp, encoding="utf-8"):
+    """Loads a text file exported from Trios software into a list of ``hicsv.hicsv`` objects. 
+    
+    Args:
+        fp (str or file-like): Path or file-like object of the source text file. 
+        encoding (str): Encoding of the source file. Defaults to utf-8. 
+
+    Returns:
+        A list of ``hicsv.hicsv`` objects, each corresponding to one step in the experiment. 
+
+    Examples:
+        >>> ds = snpl.rheo.load_RheologyAdvantageExported("exported.txt")
+        >>> ds[0].save("output.txt") # save only the first step
+
+    Note:
+        Currently, only tab-delimited text is supported. 
+        It is not really tested for files with multiple steps so it may not work as expected. 
+    """
+
+    if isinstance(fp, str):
+        with open(fp, "r", newline="", encoding=encoding) as f:
+            lines = f.readlines()
+    else:
+        lines = fp.readlines()
+
+    # cut into blocks
+    blocks = []
+    block = []
+    for l in lines:
+        if l.startswith("["):
+            blocks.append(block)
+            block = [l.strip("\n\r")]
+        else:
+            block.append(l.strip("\n\r"))
+    blocks.append(block)
+
+    # first block 
+    first_block =  blocks.pop(0)
+
+    # other blocks
+    step_blocks = []
+    header_blocks = []
+    for b in blocks:
+        if b[0] == "[step]":
+            step_blocks.append(b)
+        else:
+            header_blocks.append(b)
+
+    # parse header
+    h = {}
+    for l in first_block:
+        k, v = l.split("\t", 1)
+        h[k] = v
+
+    for b in header_blocks:
+        title = b[0]
+        subh = {}
+
+        for l in b[1:]:
+            k, v = l.split("\t", 1)
+            subh[k] = v
+        
+        h[title] = subh
+
+    # parse data
+    step_objects = []
+    for i, b in enumerate(step_blocks):
+        step_name, obj = _parse_TriosExportedStepBlock(b)
+        obj.h.update(h)
+        obj.h["step number"] = i
+        obj.h["step name"] = step_name
+        step_objects.append(obj)
+
+    return step_objects
+
+
 KEYS = { 6: "gap [um]", 
         23: "time [s]",
         25: "sweep number?",

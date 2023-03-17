@@ -100,6 +100,33 @@ That is, the steps without a table is ignored.</p>
 </div>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="snpl.rheo.load_TriosExported">
+<span class="sig-prename descclassname"><span class="pre">snpl.rheo.</span></span><span class="sig-name descname"><span class="pre">load_TriosExported</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'utf-8'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/snpl/rheo.html#load_TriosExported"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#snpl.rheo.load_TriosExported" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads a text file exported from Trios software into a list of <code class="docutils literal notranslate"><span class="pre">hicsv.hicsv</span></code> objects.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fp</strong> (<em>str</em><em> or </em><em>file-like</em>) – Path or file-like object of the source text file.</p></li>
+<li><p><strong>encoding</strong> (<em>str</em>) – Encoding of the source file. Defaults to utf-8.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of <code class="docutils literal notranslate"><span class="pre">hicsv.hicsv</span></code> objects, each corresponding to one step in the experiment.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">snpl</span><span class="o">.</span><span class="n">rheo</span><span class="o">.</span><span class="n">load_RheologyAdvantageExported</span><span class="p">(</span><span class="s2">&quot;exported.txt&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;output.txt&quot;</span><span class="p">)</span> <span class="c1"># save only the first step</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Currently, only tab-delimited text is supported.
+It is not really tested for files with multiple steps so it may not work as expected.</p>
+</div>
+</dd></dl>
+
 </section>
 
 
@@ -115,6 +142,7 @@ That is, the steps without a table is ignored.</p>
 <li><a class="reference internal" href="#">snpl.rheo module</a><ul>
 <li><a class="reference internal" href="#snpl.rheo.load_RheologyAdvantageBinary"><code class="docutils literal notranslate"><span class="pre">load_RheologyAdvantageBinary()</span></code></a></li>
 <li><a class="reference internal" href="#snpl.rheo.load_RheologyAdvantageExported"><code class="docutils literal notranslate"><span class="pre">load_RheologyAdvantageExported()</span></code></a></li>
+<li><a class="reference internal" href="#snpl.rheo.load_TriosExported"><code class="docutils literal notranslate"><span class="pre">load_TriosExported()</span></code></a></li>
 </ul>
 </li>
 </ul>
