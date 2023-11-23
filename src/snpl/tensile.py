@@ -209,10 +209,14 @@ def load_TrapeziumCycleCSV(fp, encoding="shift-jis", initial_cycle_id=0, dialect
     # this may not be the actual number of cycles
     # if the measurement was terminated before completing 
     # all cycles
-    try:
-        num_cycles = h["サイクル回数"]
-    except KeyError:
-        num_cycles = h["ｻｲｸﾙ回数"]
+    num_cycles = 0
+    for k in ("サイクル回数", "ｻｲｸﾙ回数", "Number of Cycles"):
+        try:
+            num_cycles = h[k]
+        except KeyError:
+            pass
+        else:
+            break
         
     # sample geometry
     keys = blocks[1][2][1:]
