@@ -1,0 +1,7 @@
+snpl.dsc module
+===============
+
+.. automodule:: snpl.dsc
+   :members:
+   :undoc-members:
+   :show-inheritance:

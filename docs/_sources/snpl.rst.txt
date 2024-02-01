@@ -9,6 +9,7 @@ Submodules
 
    snpl.afm
    snpl.bod
+   snpl.dsc
    snpl.fit
    snpl.gpc
    snpl.image

@@ -67,7 +67,7 @@ Examples:
     >>> snpl.show()
     
 """
-__version__ = "0.3.3"
+__version__ = "0.3.4"
 __author__ = "NAKAGAWA Shintaro"
 
 import sys
