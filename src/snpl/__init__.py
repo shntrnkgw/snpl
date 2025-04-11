@@ -67,7 +67,7 @@ Examples:
     >>> snpl.show()
     
 """
-__version__ = "0.3.4"
+__version__ = "0.3.5"
 __author__ = "NAKAGAWA Shintaro"
 
 import sys
@@ -84,7 +84,9 @@ from snpl import afm, bod, fit, gpc, image, tensile, rheo, util, uvvis
 #----------------#
 
 import importlib.resources
-pyplot.style.use(importlib.resources.path("snpl", "matplotlibrc_snpl"))
+
+with importlib.resources.path("snpl", "matplotlibrc_snpl") as path_to_matplotlibrc:
+    pyplot.style.use(path_to_matplotlibrc)
 
 
 # This is to make the position of the super/subscripts more natural. 
@@ -254,7 +256,7 @@ def formaty(empty=False, scientific=True, ax=None):
     elif scientific:
         ax_.ticklabel_format(axis="y", style="scientific")
     else:
-        ax_.ticklabel_format(axis="y", style="plain")
+        ax_.ticklabel_format(axis="y", style="plain")    
 
 def remove_borders(*args, ax=None):
     """Removes axes frame on the specified sides. 
